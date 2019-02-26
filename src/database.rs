@@ -1,6 +1,6 @@
-use foundationdb_sys as fdb;
 use crate::future::Error;
 use crate::transaction::Transaction;
+use foundationdb_sys as fdb;
 use std::ptr;
 
 pub struct Database {

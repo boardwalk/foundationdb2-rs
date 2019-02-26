@@ -5,9 +5,9 @@ use std::error;
 use std::ffi::CStr;
 use std::fmt;
 use std::mem::replace;
+use std::os::raw::c_int;
 use std::pin::Pin;
 use std::ptr;
-use std::os::raw::c_int;
 use std::slice;
 
 /*
@@ -41,7 +41,11 @@ impl futures::Future for Future {
 
             let waker_ptr = &self.waker as *const _;
             unsafe {
-                fdb::fdb_future_set_callback(self.fut, Some(fdb_future_callback), waker_ptr as *mut _);
+                fdb::fdb_future_set_callback(
+                    self.fut,
+                    Some(fdb_future_callback),
+                    waker_ptr as *mut _,
+                );
             }
 
             self.registered = true;
@@ -123,9 +127,7 @@ pub struct ReadyFuture {
 
 impl ReadyFuture {
     pub fn new(fut: *mut fdb::FDBFuture) -> Self {
-        Self {
-            fut,
-        }
+        Self { fut }
     }
 
     impl_value_into!(into_cluster, fdb_future_get_cluster, FDBCluster);
@@ -137,7 +139,11 @@ impl ReadyFuture {
         let mut val_len = 0;
         bail!(unsafe { fdb::fdb_future_get_value(self.fut, &mut present, &mut val, &mut val_len) });
         if present != 0 {
-            Ok(Some(Value { fut: replace(&mut self.fut, ptr::null_mut()), val, val_len }))
+            Ok(Some(Value {
+                fut: replace(&mut self.fut, ptr::null_mut()),
+                val,
+                val_len,
+            }))
         } else {
             Ok(None)
         }
@@ -162,9 +168,7 @@ pub struct Error {
 
 impl Error {
     pub fn new(err: fdb::fdb_error_t) -> Self {
-        Self {
-            err,
-        }
+        Self { err }
     }
 
     pub(crate) fn err(&self) -> fdb::fdb_error_t {

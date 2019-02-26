@@ -1,4 +1,4 @@
-use crate::future::{Future, Error, Value};
+use crate::future::{Error, Future, Value};
 use foundationdb_sys as fdb;
 use std::os::raw::c_int;
 
@@ -35,21 +35,50 @@ pub struct Transaction {
 
 impl Transaction {
     pub async fn get<'a>(&'a self, key: &'a [u8], snapshot: bool) -> Result<Option<Value>, Error> {
-        let fut = unsafe { fdb::fdb_transaction_get(self.tran, key.as_ptr(), key.len() as c_int, snapshot as fdb::fdb_bool_t) };
+        let fut = unsafe {
+            fdb::fdb_transaction_get(
+                self.tran,
+                key.as_ptr(),
+                key.len() as c_int,
+                snapshot as fdb::fdb_bool_t,
+            )
+        };
         let rfut = await!(Future::new(fut))?;
         rfut.into_value()
     }
 
     pub fn set(&self, key: &[u8], value: &[u8]) {
-        unsafe { fdb::fdb_transaction_set(self.tran, key.as_ptr(), key.len() as c_int, value.as_ptr(), value.len() as c_int) };
+        unsafe {
+            fdb::fdb_transaction_set(
+                self.tran,
+                key.as_ptr(),
+                key.len() as c_int,
+                value.as_ptr(),
+                value.len() as c_int,
+            )
+        };
     }
 
     pub fn clear(&self, key: &[u8]) {
-        unsafe { fdb::fdb_transaction_clear(self.tran, key.as_ptr(), key.len() as c_int) };
+        unsafe {
+            fdb::fdb_transaction_clear(
+                self.tran,
+                key.as_ptr(),
+                key.len() as c_int,
+            )
+        };
     }
 
     pub fn clear_range(&self, begin_key: &[u8], end_key: &[u8]) {
-        unsafe { fdb::fdb_transaction_clear_range(self.tran, begin_key.as_ptr(), begin_key.len() as c_int, end_key.as_ptr(), end_key.len() as c_int) };
+        unsafe {
+            fdb::fdb_transaction_clear_range(
+                self.tran,
+                begin_key.as_ptr(),
+                begin_key.len() as c_int,
+                end_key.as_ptr(),
+                end_key.len() as c_int,
+            )
+        };
     }
 
     pub async fn commit(&self) -> Result<(), Error> {
@@ -59,7 +88,13 @@ impl Transaction {
     }
 
     pub async fn watch<'a>(&'a self, key: &'a [u8]) -> Result<(), Error> {
-        let fut = unsafe { fdb::fdb_transaction_watch(self.tran, key.as_ptr(), key.len() as c_int) };
+        let fut = unsafe {
+            fdb::fdb_transaction_watch(
+                self.tran,
+                key.as_ptr(),
+                key.len() as c_int,
+            )
+        };
         let _ = await!(Future::new(fut))?;
         Ok(())
     }

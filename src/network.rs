@@ -1,7 +1,7 @@
-use foundationdb_sys as fdb;
-use std::thread::{self, JoinHandle};
 use crate::future::Error;
+use foundationdb_sys as fdb;
 use std::os::raw::c_int;
+use std::thread::{self, JoinHandle};
 
 /*
  * Missing:
@@ -14,7 +14,12 @@ pub struct Network {
 
 impl Network {
     pub fn new() -> Result<Self, Error> {
-        bail!(unsafe { fdb::fdb_select_api_version_impl(fdb::FDB_API_VERSION as c_int, fdb::FDB_API_VERSION as c_int) });
+        bail!(unsafe {
+            fdb::fdb_select_api_version_impl(
+                fdb::FDB_API_VERSION as c_int,
+                fdb::FDB_API_VERSION as c_int,
+            )
+        });
         bail!(unsafe { fdb::fdb_setup_network() });
 
         let join_handle = thread::spawn(|| Network::run().unwrap());
