@@ -3,6 +3,11 @@ use std::thread::{self, JoinHandle};
 use crate::future::Error;
 use std::os::raw::c_int;
 
+/*
+ * Missing:
+ * fdb_network_set_option
+ */
+
 pub struct Network {
     join_handle: Option<JoinHandle<()>>,
 }

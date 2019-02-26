@@ -15,6 +15,20 @@ pub async fn retry(f: impl Fn() -> Transaction) -> Result<(), Error> {
     }
 }
 
+/*
+ * Missing:
+ * fdb_transaction_set_option
+ * fdb_transaction_set_read_version
+ * fdb_transaction_get_read_version
+ * fdb_transaction_get_key
+ * fdb_transaction_get_addresses_for_key
+ * fdb_transaction_get_range
+ * fdb_transaction_atomic_op
+ * fdb_transaction_get_committed_version
+ * fdb_transaction_get_versionstamp
+ * fdb_transaction_add_conflict_range
+ */
+
 pub struct Transaction {
     pub(crate) tran: *mut fdb::FDBTransaction,
 }
@@ -37,8 +51,6 @@ impl Transaction {
     pub fn clear_range(&self, begin_key: &[u8], end_key: &[u8]) {
         unsafe { fdb::fdb_transaction_clear_range(self.tran, begin_key.as_ptr(), begin_key.len() as c_int, end_key.as_ptr(), end_key.len() as c_int) };
     }
-
-    // TODO atomic_op
 
     pub async fn commit(&self) -> Result<(), Error> {
         let fut = unsafe { fdb::fdb_transaction_commit(self.tran) };
