@@ -21,3 +21,21 @@ pub use database::Database;
 pub use future::{Error, Value};
 pub use network::Network;
 pub use transaction::{retry, Transaction};
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use futures::executor::block_on;
+
+    #[test]
+    fn test_general() {
+        let _network = Network::new().unwrap();
+        block_on(test_general_async()).unwrap();
+    }
+
+    async fn test_general_async() -> Result<(), Error> {
+        let cluster = await!(Cluster::new("/Users/boardwalk/Code/foundationdb-build/fdb.cluster"))?;
+        let _database = await!(cluster.create_database())?;
+        Ok(())
+    }
+}
