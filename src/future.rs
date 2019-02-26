@@ -111,16 +111,6 @@ impl Drop for Value {
  * ReadyFuture
  */
 
-macro_rules! impl_value_into {
-    ($local_fun:ident, $fdb_fun:ident, $ty:ident) => {
-        pub fn $local_fun(self) -> Result<*mut fdb::$ty, Error> {
-            let mut val = ptr::null_mut();
-            bail!(unsafe { fdb::$fdb_fun(self.fut, &mut val) });
-            Ok(val)
-        }
-    };
-}
-
 pub struct ReadyFuture {
     fut: *mut fdb::FDBFuture,
 }
@@ -130,8 +120,17 @@ impl ReadyFuture {
         Self { fut }
     }
 
-    impl_value_into!(into_cluster, fdb_future_get_cluster, FDBCluster);
-    impl_value_into!(into_database, fdb_future_get_database, FDBDatabase);
+    pub fn into_cluster(self) -> Result<*mut fdb::FDBCluster, Error> {
+        let mut val = ptr::null_mut();
+        bail!(unsafe { fdb::fdb_future_get_cluster(self.fut, &mut val) });
+        Ok(val)
+    }
+
+    pub fn into_database(self) -> Result<*mut fdb::FDBDatabase, Error> {
+        let mut val = ptr::null_mut();
+        bail!(unsafe { fdb::fdb_future_get_database(self.fut, &mut val) });
+        Ok(val)
+    }
 
     pub fn into_value(mut self) -> Result<Option<Value>, Error> {
         let mut present = 0;

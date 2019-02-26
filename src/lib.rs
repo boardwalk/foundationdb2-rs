@@ -18,5 +18,6 @@ mod transaction;
 
 pub use cluster::Cluster;
 pub use database::Database;
+pub use future::{Error, Value};
 pub use network::Network;
 pub use transaction::{retry, Transaction};
