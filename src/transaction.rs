@@ -1,4 +1,4 @@
-use crate::future::{Error, Future, KeyValueArray, Key, Value};
+use crate::future::{Error, Future, Key, KeyValueArray, Value};
 use foundationdb_sys as fdb;
 use std::os::raw::c_int;
 

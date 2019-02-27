@@ -163,7 +163,9 @@ pub struct KeyValueArray {
 
 impl KeyValueArray {
     pub fn get(&self, index: usize) -> KeyValue {
-        KeyValue { kv: unsafe { self.kv.add(index) } }
+        KeyValue {
+            kv: unsafe { self.kv.add(index) },
+        }
     }
 
     pub fn len(&self) -> usize {

@@ -20,7 +20,7 @@ pub use cluster::Cluster;
 pub use database::Database;
 pub use future::{Error, KeyValue, KeyValueArray, Value};
 pub use network::Network;
-pub use transaction::{retry, KeySelector, StreamingMode, GetRangeOpt, MutationType, Transaction};
+pub use transaction::{retry, GetRangeOpt, KeySelector, MutationType, StreamingMode, Transaction};
 
 #[cfg(test)]
 mod test {
