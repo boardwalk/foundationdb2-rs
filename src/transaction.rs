@@ -1,4 +1,4 @@
-use crate::future::{Error, Future, KeyValueArray, Value};
+use crate::future::{Error, Future, KeyValueArray, Key, Value};
 use foundationdb_sys as fdb;
 use std::os::raw::c_int;
 
@@ -57,14 +57,41 @@ pub struct GetRangeOpt<'a> {
     reverse: bool,
 }
 
+pub enum MutationType {
+    Add,
+    And,
+    Or,
+    Xor,
+    Max,
+    ByteMax,
+    Min,
+    ByteMin,
+    SetVersionstampedKey,
+}
+
+impl MutationType {
+    fn as_c_enum(&self) -> fdb::FDBMutationType {
+        use MutationType::*;
+        match self {
+            Add => fdb::FDBMutationType_FDB_MUTATION_TYPE_ADD,
+            And => fdb::FDBMutationType_FDB_MUTATION_TYPE_AND,
+            Or => fdb::FDBMutationType_FDB_MUTATION_TYPE_OR,
+            Xor => fdb::FDBMutationType_FDB_MUTATION_TYPE_XOR,
+            Max => fdb::FDBMutationType_FDB_MUTATION_TYPE_MAX,
+            ByteMax => fdb::FDBMutationType_FDB_MUTATION_TYPE_BYTE_MAX,
+            Min => fdb::FDBMutationType_FDB_MUTATION_TYPE_MIN,
+            ByteMin => fdb::FDBMutationType_FDB_MUTATION_TYPE_BYTE_MIN,
+            SetVersionstampedKey => fdb::FDBMutationType_FDB_MUTATION_TYPE_SET_VERSIONSTAMPED_KEY,
+        }
+    }
+}
+
 /*
  * Missing:
  * fdb_transaction_set_option
  * fdb_transaction_set_read_version
  * fdb_transaction_get_read_version
- * fdb_transaction_get_key
  * fdb_transaction_get_addresses_for_key
- * fdb_transaction_atomic_op
  * fdb_transaction_get_committed_version
  * fdb_transaction_get_versionstamp
  * fdb_transaction_add_conflict_range
@@ -88,7 +115,22 @@ impl Transaction {
         rfut.into_value()
     }
 
-    pub async fn get_range<'a>(&'a self, opt: &'a GetRangeOpt<'a>) -> Result<KeyValueArray, Error> {
+    pub async fn get_key<'a>(&'a self, selector: KeySelector<'a>, snapshot: bool) -> Result<Key, Error> {
+        let fut = unsafe {
+            fdb::fdb_transaction_get_key(
+                self.tran,
+                selector.key.as_ptr(),
+                selector.key.len() as c_int,
+                selector.equal as fdb::fdb_bool_t,
+                selector.offset as c_int,
+                snapshot as fdb::fdb_bool_t,
+            )
+        };
+        let rfut = await!(Future::new(fut))?;
+        rfut.into_key()
+    }
+
+    pub async fn get_range<'a>(&'a self, opt: GetRangeOpt<'a>) -> Result<KeyValueArray, Error> {
         let fut = unsafe {
             fdb::fdb_transaction_get_range(
                 self.tran,
@@ -110,6 +152,19 @@ impl Transaction {
         };
         let rfut = await!(Future::new(fut))?;
         rfut.into_keyvalue_array()
+    }
+
+    pub fn atomic_op(&self, key: &[u8], param: &[u8], mut_type: MutationType) {
+        unsafe {
+            fdb::fdb_transaction_atomic_op(
+                self.tran,
+                key.as_ptr(),
+                key.len() as c_int,
+                param.as_ptr(),
+                param.len() as c_int,
+                mut_type.as_c_enum(),
+            )
+        };
     }
 
     pub fn set(&self, key: &[u8], value: &[u8]) {

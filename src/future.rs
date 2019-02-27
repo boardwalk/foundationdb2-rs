@@ -85,6 +85,28 @@ extern "C" fn fdb_future_callback(
 }
 
 /*
+ * Key
+ */
+
+pub struct Key {
+    fut: *mut fdb::FDBFuture,
+    key: *const u8,
+    key_len: c_int,
+}
+
+impl AsRef<[u8]> for Key {
+    fn as_ref(&self) -> &[u8] {
+        unsafe { slice::from_raw_parts(self.key, self.key_len as usize) }
+    }
+}
+
+impl Drop for Key {
+    fn drop(&mut self) {
+        unsafe { fdb::fdb_future_destroy(self.fut) };
+    }
+}
+
+/*
  * Value
  */
 
@@ -140,15 +162,15 @@ pub struct KeyValueArray {
 }
 
 impl KeyValueArray {
-    fn get(&self, index: usize) -> KeyValue {
+    pub fn get(&self, index: usize) -> KeyValue {
         KeyValue { kv: unsafe { self.kv.add(index) } }
     }
 
-    fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.count as usize
     }
 
-    fn more(&self) -> bool {
+    pub fn more(&self) -> bool {
         self.more != 0
     }
 }
@@ -182,6 +204,17 @@ impl ReadyFuture {
         let mut val = ptr::null_mut();
         bail!(unsafe { fdb::fdb_future_get_database(self.fut, &mut val) });
         Ok(val)
+    }
+
+    pub fn into_key(mut self) -> Result<Key, Error> {
+        let mut key = ptr::null();
+        let mut key_len = 0;
+        bail!(unsafe { fdb::fdb_future_get_key(self.fut, &mut key, &mut key_len) });
+        Ok(Key {
+            fut: replace(&mut self.fut, ptr::null_mut()),
+            key,
+            key_len,
+        })
     }
 
     pub fn into_value(mut self) -> Result<Option<Value>, Error> {
