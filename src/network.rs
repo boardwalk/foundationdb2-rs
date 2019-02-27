@@ -1,4 +1,4 @@
-use crate::future::Error;
+use crate::error::Error;
 use foundationdb_sys as fdb;
 use std::os::raw::c_int;
 use std::thread::{self, JoinHandle};

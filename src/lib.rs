@@ -5,20 +5,22 @@ macro_rules! bail {
     ($e:expr) => {{
         let err = $e;
         if err != 0 {
-            return Err(crate::future::Error::new(err));
+            return Err(crate::error::Error::new(err));
         }
     }};
 }
 
 mod cluster;
 mod database;
+mod error;
 mod future;
 mod network;
 mod transaction;
 
 pub use cluster::Cluster;
 pub use database::Database;
-pub use future::{Error, KeyValue, KeyValueArray, Value};
+pub use error::Error;
+pub use future::{KeyValue, KeyValueArray, Value};
 pub use network::Network;
 pub use transaction::{retry, GetRangeOpt, KeySelector, MutationType, StreamingMode, Transaction};
 

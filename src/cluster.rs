@@ -1,5 +1,6 @@
 use crate::database::Database;
-use crate::future::{Error, Future};
+use crate::error::Error;
+use crate::future::Future;
 use foundationdb_sys as fdb;
 use std::ffi::CString;
 use std::os::raw::c_int;
