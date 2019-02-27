@@ -29,14 +29,18 @@ impl Network {
         })
     }
 
-    fn run() -> Result<(), Error> {
-        bail!(unsafe { fdb::fdb_run_network() });
+    pub fn stop(&mut self) -> Result<(), Error> {
+        if let Some(join_handle) = self.join_handle.take() {
+            bail!(unsafe { fdb::fdb_stop_network() });
+            let unknown_error = 4000;
+            join_handle.join().map_err(|_| Error::new(unknown_error))?;
+        }
 
         Ok(())
     }
 
-    fn stop() -> Result<(), Error> {
-        bail!(unsafe { fdb::fdb_stop_network() });
+    fn run() -> Result<(), Error> {
+        bail!(unsafe { fdb::fdb_run_network() });
 
         Ok(())
     }
@@ -44,9 +48,6 @@ impl Network {
 
 impl Drop for Network {
     fn drop(&mut self) {
-        Network::stop().unwrap();
-
-        let join_handle = self.join_handle.take().unwrap();
-        join_handle.join().unwrap();
+        self.stop().unwrap();
     }
 }

@@ -34,8 +34,22 @@ mod test {
     }
 
     async fn test_general_async() -> Result<(), Error> {
+        // Note: If you create a cluster and a database and then immediately shut down,
+        // the network thread will crash. I should create a C repro and post an issue.
+
         let cluster = await!(Cluster::new("/Users/boardwalk/Code/foundationdb-build/fdb.cluster"))?;
-        let _database = await!(cluster.create_database())?;
+        let database = await!(cluster.create_database())?;
+        let transaction = database.create_transaction()?;
+
+        transaction.set(b"hello", b"world");
+
+        let value = await!(transaction.get(b"hello", false))?;
+
+        assert_eq!(value.as_ref().map(|v| v.as_ref()), Some(&b"world"[..]));
+
+        transaction.clear(b"hello");
+        await!(transaction.commit())?;
+
         Ok(())
     }
 }

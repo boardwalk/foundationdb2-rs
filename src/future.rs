@@ -39,12 +39,11 @@ impl futures::Future for Future {
         if !self.registered {
             self.waker.register(waker);
 
-            let waker_ptr = &self.waker as *const _;
             unsafe {
                 fdb::fdb_future_set_callback(
                     self.fut,
                     Some(fdb_future_callback),
-                    waker_ptr as *mut _,
+                    &self.waker as *const _ as *mut _,
                 );
             }
 
