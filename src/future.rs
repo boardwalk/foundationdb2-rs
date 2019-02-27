@@ -107,6 +107,59 @@ impl Drop for Value {
 }
 
 /*
+ * KeyValue
+ */
+
+pub struct KeyValue {
+    kv: *const fdb::FDBKeyValue,
+}
+
+impl KeyValue {
+    pub fn key(&self) -> &[u8] {
+        // FIXME
+        &[]
+        // unsafe { slice::from_raw_parts((*self.kv).key, (*self.kv).key_length) }
+    }
+
+    pub fn value(&self) -> &[u8] {
+        // FIXME
+        &[]
+        // unsafe { slice::from_raw_parts((*self.kv).value, (*self.kv).value_length) }
+    }
+}
+
+/*
+ * KeyValueArray
+ */
+
+pub struct KeyValueArray {
+    fut: *mut fdb::FDBFuture,
+    kv: *const fdb::FDBKeyValue,
+    count: c_int,
+    more: fdb::fdb_bool_t,
+}
+
+impl KeyValueArray {
+    fn get(&self, index: usize) -> KeyValue {
+        KeyValue { kv: unsafe { self.kv.add(index) } }
+    }
+
+    fn len(&self) -> usize {
+        self.count as usize
+    }
+
+    fn more(&self) -> bool {
+        self.more != 0
+    }
+}
+
+impl Drop for KeyValueArray {
+    fn drop(&mut self) {
+        unsafe { fdb::fdb_future_destroy(self.fut) };
+    }
+}
+
+/*
  * ReadyFuture
  */
 
@@ -145,6 +198,19 @@ impl ReadyFuture {
         } else {
             Ok(None)
         }
+    }
+
+    pub fn into_keyvalue_array(mut self) -> Result<KeyValueArray, Error> {
+        let mut kv = ptr::null();
+        let mut count = 0;
+        let mut more = 0;
+        bail!(unsafe { fdb::fdb_future_get_keyvalue_array(self.fut, &mut kv, &mut count, &mut more) });
+        Ok(KeyValueArray {
+            fut: replace(&mut self.fut, ptr::null_mut()),
+            kv,
+            count,
+            more,
+        })
     }
 }
 
