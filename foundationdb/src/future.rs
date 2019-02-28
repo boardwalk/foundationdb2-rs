@@ -80,9 +80,7 @@ extern "C" fn fdb_future_callback(
     callback_parameter: *mut c_void,
 ) {
     let awaker: *const AtomicWaker = callback_parameter as *const _;
-    unsafe {
-        (*awaker).wake();
-    }
+    unsafe { (*awaker).wake() };
 }
 
 /*
