@@ -5,16 +5,6 @@ use std::mem::replace;
 use std::os::raw::c_int;
 use std::ptr;
 
-pub async fn retry(f: impl Fn() -> Transaction) -> Result<CommittedTransaction, FailedTransaction> {
-    loop {
-        let tran = f();
-        match await!(tran.commit()) {
-            Ok(tran) => return Ok(tran),
-            Err(tran) => await!(tran.on_error())?,
-        }
-    }
-}
-
 pub struct KeySelector<'a> {
     key: &'a [u8],
     equal: bool,

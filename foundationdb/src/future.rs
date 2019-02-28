@@ -4,6 +4,7 @@ use futures;
 use futures::task::{AtomicWaker, Waker};
 use std::borrow::Cow;
 use std::ffi::CStr;
+use std::marker::PhantomData;
 use std::mem::replace;
 use std::os::raw::{c_char, c_int, c_void};
 use std::pin::Pin;
@@ -140,11 +141,12 @@ struct RawKeyValue {
     value_len: c_int,
 }
 
-pub struct KeyValue {
+pub struct KeyValue<'a> {
     kv: *const fdb::FDBKeyValue,
+    _phantom: PhantomData<&'a fdb::FDBKeyValue>,
 }
 
-impl KeyValue {
+impl<'a> KeyValue<'a> {
     pub fn key(&self) -> &[u8] {
         let kv = self.kv as *const RawKeyValue;
         unsafe { slice::from_raw_parts((*kv).key, (*kv).key_len as usize) }
@@ -171,6 +173,7 @@ impl KeyValueArray {
     pub fn get(&self, index: usize) -> KeyValue {
         KeyValue {
             kv: unsafe { self.kv.add(index) },
+            _phantom: PhantomData,
         }
     }
 

@@ -16,13 +16,15 @@ mod error;
 mod future;
 mod network;
 mod transaction;
+mod utils;
 
 pub use cluster::Cluster;
 pub use database::Database;
 pub use error::Error;
 pub use future::{Key, KeyValue, KeyValueArray, StringArray, Value};
 pub use network::Network;
-pub use transaction::{retry, GetRangeOpt, KeySelector, MutationType, StreamingMode, Transaction};
+pub use transaction::{GetRangeOpt, KeySelector, MutationType, StreamingMode, Transaction};
+pub use utils::retry;
 
 #[cfg(test)]
 mod test {
