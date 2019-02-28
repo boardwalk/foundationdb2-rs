@@ -89,10 +89,7 @@ impl MutationType {
 /*
  * Missing:
  * fdb_transaction_set_option
- * fdb_transaction_set_read_version
- * fdb_transaction_get_read_version
  * fdb_transaction_get_addresses_for_key
- * fdb_transaction_get_committed_version
  * fdb_transaction_get_versionstamp
  * fdb_transaction_add_conflict_range
  */
@@ -106,6 +103,18 @@ pub struct Transaction {
 }
 
 impl Transaction {
+    pub fn set_read_version(&self, version: i64) {
+        unsafe { fdb::fdb_transaction_set_read_version(self.tran, version) };
+    }
+
+    pub async fn get_read_version(&self) -> Result<i64, Error> {
+        let fut = unsafe {
+            fdb::fdb_transaction_get_read_version(self.tran)
+        };
+        let rfut = await!(Future::new(fut))?;
+        rfut.into_version()
+    }
+
     pub async fn get<'a>(&'a self, key: &'a [u8], snapshot: bool) -> Result<Option<Value>, Error> {
         let fut = unsafe {
             fdb::fdb_transaction_get(

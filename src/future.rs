@@ -3,7 +3,7 @@ use foundationdb_sys as fdb;
 use futures;
 use futures::task::{AtomicWaker, Waker};
 use std::mem::replace;
-use std::os::raw::c_int;
+use std::os::raw::{c_int, c_void};
 use std::pin::Pin;
 use std::ptr;
 use std::slice;
@@ -74,7 +74,7 @@ impl Drop for Future {
 
 extern "C" fn fdb_future_callback(
     _fut: *mut fdb::FDBFuture,
-    callback_parameter: *mut ::std::os::raw::c_void,
+    callback_parameter: *mut c_void,
 ) {
     let awaker: *const AtomicWaker = callback_parameter as *const _;
     unsafe {
@@ -244,6 +244,12 @@ impl ReadyFuture {
             count,
             more,
         })
+    }
+
+    pub fn into_version(self) -> Result<i64, Error> {
+        let mut version = 0;
+        bail!(unsafe { fdb::fdb_future_get_version(self.fut, &mut version) });
+        Ok(version)
     }
 }
 
