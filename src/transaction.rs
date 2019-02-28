@@ -1,17 +1,16 @@
 use crate::error::Error;
 use crate::future::{Future, Key, KeyValueArray, Value};
 use foundationdb_sys as fdb;
+use std::mem::replace;
 use std::os::raw::c_int;
+use std::ptr;
 
-pub async fn retry(f: impl Fn() -> Transaction) -> Result<(), Error> {
+pub async fn retry(f: impl Fn() -> Transaction) -> Result<CommittedTransaction, FailedTransaction> {
     loop {
         let tran = f();
         match await!(tran.commit()) {
-            Ok(_) => return Ok(()),
-            Err(err) => {
-                let fut = unsafe { fdb::fdb_transaction_on_error(tran.tran, err.err()) };
-                let _ = await!(Future::new(fut))?;
-            }
+            Ok(tran) => return Ok(tran),
+            Err(tran) => await!(tran.on_error())?,
         }
     }
 }
@@ -96,6 +95,10 @@ impl MutationType {
  * fdb_transaction_get_committed_version
  * fdb_transaction_get_versionstamp
  * fdb_transaction_add_conflict_range
+ */
+
+/*
+ * Transaction
  */
 
 pub struct Transaction {
@@ -202,10 +205,21 @@ impl Transaction {
         };
     }
 
-    pub async fn commit(&self) -> Result<(), Error> {
+    pub async fn commit(mut self) -> Result<CommittedTransaction, FailedTransaction> {
         let fut = unsafe { fdb::fdb_transaction_commit(self.tran) };
-        let _rfut = await!(Future::new(fut))?;
-        Ok(())
+        match await!(Future::new(fut)) {
+            Ok(_) => {
+                Ok(CommittedTransaction {
+                    tran: replace(&mut self.tran, ptr::null_mut()),
+                })
+            }
+            Err(err) => {
+                Err(FailedTransaction {
+                    tran: replace(&mut self.tran, ptr::null_mut()),
+                    err: err.err,
+                })
+            }
+        }
     }
 
     pub async fn watch<'a>(&'a self, key: &'a [u8]) -> Result<(), Error> {
@@ -230,6 +244,62 @@ impl Transaction {
 }
 
 impl Drop for Transaction {
+    fn drop(&mut self) {
+        if !self.tran.is_null() {
+            unsafe { fdb::fdb_transaction_destroy(self.tran) };
+        }
+    }
+}
+
+/*
+ * CommittedTransaction
+ */
+
+pub struct CommittedTransaction {
+    tran: *mut fdb::FDBTransaction,
+}
+
+impl CommittedTransaction {
+    pub fn get_committed_version(&self) -> Result<i64, Error> {
+        let mut version = 0;
+        bail!(unsafe { fdb::fdb_transaction_get_committed_version(self.tran, &mut version) });
+        Ok(version)
+    }
+}
+
+impl Drop for CommittedTransaction {
+    fn drop(&mut self) {
+        unsafe { fdb::fdb_transaction_destroy(self.tran) };
+    }
+}
+
+/*
+ * FailedTransaction
+ */
+
+pub struct FailedTransaction {
+    tran: *mut fdb::FDBTransaction,
+    err: fdb::fdb_error_t,
+}
+
+impl FailedTransaction {
+    pub async fn on_error(mut self) -> Result<(), FailedTransaction> {
+        let fut = unsafe { fdb::fdb_transaction_on_error(self.tran, self.err) };
+        match await!(Future::new(fut)) {
+            Ok(_) => Ok(()),
+            Err(err) => {
+                self.err = err.err;
+                Err(self)
+            }
+        }
+    }
+
+    pub fn into_error(self) -> Error {
+        Error { err: self.err }
+    }
+}
+
+impl Drop for FailedTransaction {
     fn drop(&mut self) {
         unsafe { fdb::fdb_transaction_destroy(self.tran) };
     }

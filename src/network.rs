@@ -33,7 +33,7 @@ impl Network {
         if let Some(join_handle) = self.join_handle.take() {
             bail!(unsafe { fdb::fdb_stop_network() });
             let unknown_error = 4000;
-            join_handle.join().map_err(|_| Error::new(unknown_error))?;
+            join_handle.join().map_err(|_| Error { err: unknown_error })?;
         }
 
         Ok(())

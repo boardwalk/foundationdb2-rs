@@ -4,17 +4,7 @@ use std::error;
 use std::ffi::CStr;
 
 pub struct Error {
-    err: fdb::fdb_error_t,
-}
-
-impl Error {
-    pub fn new(err: fdb::fdb_error_t) -> Self {
-        Self { err }
-    }
-
-    pub(crate) fn err(&self) -> fdb::fdb_error_t {
-        self.err
-    }
+    pub(crate) err: fdb::fdb_error_t,
 }
 
 impl fmt::Debug for Error {

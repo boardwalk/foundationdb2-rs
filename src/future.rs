@@ -56,7 +56,7 @@ impl futures::Future for Future {
 
         let err = unsafe { fdb::fdb_future_get_error(self.fut) };
         if err != 0 {
-            return futures::Poll::Ready(Err(Error::new(err)));
+            return futures::Poll::Ready(Err(Error { err }));
         }
 
         let res = ReadyFuture::new(replace(&mut self.fut, ptr::null_mut()));
