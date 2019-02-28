@@ -1,5 +1,5 @@
 use crate::error::Error;
-use crate::future::{Future, Key, KeyValueArray, Value};
+use crate::future::{Future, Key, KeyValueArray, StringArray, Value};
 use foundationdb_sys as fdb;
 use std::mem::replace;
 use std::os::raw::c_int;
@@ -89,7 +89,6 @@ impl MutationType {
 /*
  * Missing:
  * fdb_transaction_set_option
- * fdb_transaction_get_addresses_for_key
  * fdb_transaction_get_versionstamp
  * fdb_transaction_add_conflict_range
  */
@@ -103,18 +102,6 @@ pub struct Transaction {
 }
 
 impl Transaction {
-    pub fn set_read_version(&self, version: i64) {
-        unsafe { fdb::fdb_transaction_set_read_version(self.tran, version) };
-    }
-
-    pub async fn get_read_version(&self) -> Result<i64, Error> {
-        let fut = unsafe {
-            fdb::fdb_transaction_get_read_version(self.tran)
-        };
-        let rfut = await!(Future::new(fut))?;
-        rfut.into_version()
-    }
-
     pub async fn get<'a>(&'a self, key: &'a [u8], snapshot: bool) -> Result<Option<Value>, Error> {
         let fut = unsafe {
             fdb::fdb_transaction_get(
@@ -241,6 +228,30 @@ impl Transaction {
         };
         let _ = await!(Future::new(fut))?;
         Ok(())
+    }
+
+    pub fn set_read_version(&self, version: i64) {
+        unsafe { fdb::fdb_transaction_set_read_version(self.tran, version) };
+    }
+
+    pub async fn get_read_version(&self) -> Result<i64, Error> {
+        let fut = unsafe {
+            fdb::fdb_transaction_get_read_version(self.tran)
+        };
+        let rfut = await!(Future::new(fut))?;
+        rfut.into_version()
+    }
+
+    pub async fn get_addresses_for_key<'a>(&'a self, key: &'a [u8]) -> Result<StringArray, Error> {
+        let fut = unsafe {
+            fdb::fdb_transaction_get_addresses_for_key(
+                self.tran,
+                key.as_ptr(),
+                key.len() as c_int,
+            )
+        };
+        let rfut = await!(Future::new(fut))?;
+        rfut.into_string_array()
     }
 
     pub fn reset(&self) {

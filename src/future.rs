@@ -2,8 +2,10 @@ use crate::error::Error;
 use foundationdb_sys as fdb;
 use futures;
 use futures::task::{AtomicWaker, Waker};
+use std::borrow::Cow;
+use std::ffi::CStr;
 use std::mem::replace;
-use std::os::raw::{c_int, c_void};
+use std::os::raw::{c_char, c_int, c_void};
 use std::pin::Pin;
 use std::ptr;
 use std::slice;
@@ -182,6 +184,33 @@ impl Drop for KeyValueArray {
 }
 
 /*
+ * StringArray
+ */
+
+pub struct StringArray {
+    fut: *mut fdb::FDBFuture,
+    strings: *mut *const c_char,
+    count: c_int,
+}
+
+impl StringArray {
+    pub fn get(&self, index: usize) -> Cow<str> {
+        let s = unsafe { CStr::from_ptr(*self.strings.add(index)) };
+        s.to_string_lossy()
+    }
+
+    pub fn len(&self) -> usize {
+        self.count as usize
+    }
+}
+
+impl Drop for StringArray {
+    fn drop(&mut self) {
+        unsafe { fdb::fdb_future_destroy(self.fut) };
+    }
+}
+
+/*
  * ReadyFuture
  */
 
@@ -250,6 +279,17 @@ impl ReadyFuture {
         let mut version = 0;
         bail!(unsafe { fdb::fdb_future_get_version(self.fut, &mut version) });
         Ok(version)
+    }
+
+    pub fn into_string_array(mut self) -> Result<StringArray, Error> {
+        let mut strings = ptr::null_mut();
+        let mut count = 0;
+        bail!(unsafe { fdb::fdb_future_get_string_array(self.fut, &mut strings, &mut count) });
+        Ok(StringArray {
+            fut: replace(&mut self.fut, ptr::null_mut()),
+            strings,
+            count,
+        })
     }
 }
 
