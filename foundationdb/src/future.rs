@@ -132,21 +132,27 @@ impl Drop for Value {
  * KeyValue
  */
 
+#[repr(C)]
+struct RawKeyValue {
+    key: *const u8,
+    key_len: c_int,
+    value: *const u8,
+    value_len: c_int,
+}
+
 pub struct KeyValue {
     kv: *const fdb::FDBKeyValue,
 }
 
 impl KeyValue {
     pub fn key(&self) -> &[u8] {
-        // FIXME
-        &[]
-        // unsafe { slice::from_raw_parts((*self.kv).key, (*self.kv).key_length) }
+        let kv = self.kv as *const RawKeyValue;
+        unsafe { slice::from_raw_parts((*kv).key, (*kv).key_len as usize) }
     }
 
     pub fn value(&self) -> &[u8] {
-        // FIXME
-        &[]
-        // unsafe { slice::from_raw_parts((*self.kv).value, (*self.kv).value_length) }
+        let kv = self.kv as *const RawKeyValue;
+        unsafe { slice::from_raw_parts((*kv).value, (*kv).value_len as usize) }
     }
 }
 
