@@ -1,7 +1,7 @@
 use foundationdb_sys as fdb;
-use std::fmt;
 use std::error;
 use std::ffi::CStr;
+use std::fmt;
 
 pub struct Error {
     pub(crate) err: fdb::fdb_error_t,

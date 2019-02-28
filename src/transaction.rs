@@ -217,17 +217,13 @@ impl Transaction {
     pub async fn commit(mut self) -> Result<CommittedTransaction, FailedTransaction> {
         let fut = unsafe { fdb::fdb_transaction_commit(self.tran) };
         match await!(Future::new(fut)) {
-            Ok(_) => {
-                Ok(CommittedTransaction {
-                    tran: replace(&mut self.tran, ptr::null_mut()),
-                })
-            }
-            Err(err) => {
-                Err(FailedTransaction {
-                    tran: replace(&mut self.tran, ptr::null_mut()),
-                    err: err.err,
-                })
-            }
+            Ok(_) => Ok(CommittedTransaction {
+                tran: replace(&mut self.tran, ptr::null_mut()),
+            }),
+            Err(err) => Err(FailedTransaction {
+                tran: replace(&mut self.tran, ptr::null_mut()),
+                err: err.err,
+            }),
         }
     }
 
