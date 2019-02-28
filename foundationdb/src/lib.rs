@@ -20,7 +20,7 @@ mod transaction;
 pub use cluster::Cluster;
 pub use database::Database;
 pub use error::Error;
-pub use future::{KeyValue, KeyValueArray, Value};
+pub use future::{Key, KeyValue, KeyValueArray, StringArray, Value};
 pub use network::Network;
 pub use transaction::{retry, GetRangeOpt, KeySelector, MutationType, StreamingMode, Transaction};
 
