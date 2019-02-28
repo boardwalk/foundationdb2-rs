@@ -86,11 +86,24 @@ impl MutationType {
     }
 }
 
+pub enum ConflictRangeType {
+    Read,
+    Write,
+}
+
+impl ConflictRangeType {
+    fn as_c_enum(&self) -> fdb::FDBConflictRangeType {
+        use ConflictRangeType::*;
+        match self {
+            Read => fdb::FDBConflictRangeType_FDB_CONFLICT_RANGE_TYPE_READ,
+            Write => fdb::FDBConflictRangeType_FDB_CONFLICT_RANGE_TYPE_WRITE,
+        }
+    }
+}
+
 /*
  * Missing:
  * fdb_transaction_set_option
- * fdb_transaction_get_versionstamp
- * fdb_transaction_add_conflict_range
  */
 
 /*
@@ -252,6 +265,28 @@ impl Transaction {
         };
         let rfut = await!(Future::new(fut))?;
         rfut.into_string_array()
+    }
+
+    pub async fn get_versionstamp(&self) -> Result<Key, Error> {
+        let fut = unsafe {
+            fdb::fdb_transaction_get_versionstamp(self.tran)
+        };
+        let rfut = await!(Future::new(fut))?;
+        rfut.into_key()
+    }
+
+    pub fn add_conflict_range<'a>(&'a self, begin_key: &'a [u8], end_key: &'a [u8], range_type: ConflictRangeType) -> Result<(), Error> {
+        bail!(unsafe {
+            fdb::fdb_transaction_add_conflict_range(
+                self.tran,
+                begin_key.as_ptr(),
+                begin_key.len() as c_int,
+                end_key.as_ptr(),
+                end_key.len() as c_int,
+                range_type.as_c_enum(),
+            )
+        });
+        Ok(())
     }
 
     pub fn reset(&self) {
