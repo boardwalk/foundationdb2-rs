@@ -1,9 +1,2 @@
-[package]
-name = "foundationdb2-rs"
-version = "0.1.0"
-authors = ["Dan Skorupski <boardwalk@ersatsz.com>"]
-edition = "2018"
-
-[dependencies]
-foundationdb-sys = { path = "../foundationdb-rs/foundationdb-sys" }
-futures-preview = "0.3.0-alpha.13"
+[workspace]
+members = ["foundationdb", "foundationdb-sys"]

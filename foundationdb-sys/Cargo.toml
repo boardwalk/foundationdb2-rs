@@ -1,0 +1,14 @@
+[package]
+name = "foundationdb-sys"
+version = "0.1.0"
+authors = ["Dan Skorupski <boardwalk@ersatsz.com"]
+edition = "2018"
+
+[features]
+default = ["fdb-6_0"]
+fdb-5_1 = []
+fdb-5_2 = []
+fdb-6_0 = []
+
+[build-dependencies]
+bindgen = "0.47"
