@@ -4,11 +4,6 @@ use foundationdb_sys as fdb;
 use std::os::raw::c_int;
 use std::thread::{self, JoinHandle};
 
-/*
- * Missing:
- * fdb_network_set_option
- */
-
 pub struct Network {
     join_handle: Option<JoinHandle<()>>,
 }
