@@ -47,6 +47,7 @@ pub struct GetRangeOpt<'a> {
     reverse: bool,
 }
 
+#[derive(Clone, Copy)]
 pub enum MutationType {
     Add,
     And,
@@ -60,7 +61,7 @@ pub enum MutationType {
 }
 
 impl MutationType {
-    fn as_c_enum(&self) -> fdb::FDBMutationType {
+    fn as_c_enum(self) -> fdb::FDBMutationType {
         use MutationType::*;
         match self {
             Add => fdb::FDBMutationType_FDB_MUTATION_TYPE_ADD,
@@ -76,13 +77,14 @@ impl MutationType {
     }
 }
 
+#[derive(Clone, Copy)]
 pub enum ConflictRangeType {
     Read,
     Write,
 }
 
 impl ConflictRangeType {
-    fn as_c_enum(&self) -> fdb::FDBConflictRangeType {
+    fn as_c_enum(self) -> fdb::FDBConflictRangeType {
         use ConflictRangeType::*;
         match self {
             Read => fdb::FDBConflictRangeType_FDB_CONFLICT_RANGE_TYPE_READ,
@@ -91,10 +93,66 @@ impl ConflictRangeType {
     }
 }
 
-/*
- * Missing:
- * fdb_transaction_set_option
- */
+// TODO We could generate this from fdb.options
+#[derive(Clone, Copy)]
+pub enum TransactionOption {
+    CausalWriteRisky,
+    CausalReadRisky,
+    CausalReadDisable,
+    NextWriteNoWriteConflictRange,
+    ReadYourWritesDisable,
+    #[deprecated] ReadAheadDisable,
+    DurabilityDatacenter,
+    DurabilityRisky,
+    #[deprecated] DurabilityDevNullIsWebScale,
+    PrioritySystemImmediate,
+    PriorityBatch,
+    InitializeNewDatabase,
+    AccessSystemKeys,
+    ReadSystemKeys,
+    DebugRetryLogging,
+    TransactionLoggingEnable,
+    Timeout,
+    RetryLimit,
+    MaxRetryDelay,
+    SnapshotRywEnable,
+    SnapshotRywDisable,
+    LockAware,
+    UsedDuringCommitProtectionDisable,
+    ReadLockAware,
+}
+
+impl TransactionOption {
+    fn as_c_enum(self) -> fdb::FDBTransactionOption {
+        use TransactionOption::*;
+        match self {
+            CausalWriteRisky => fdb::FDBTransactionOption_FDB_TR_OPTION_CAUSAL_WRITE_RISKY,
+            CausalReadRisky => fdb::FDBTransactionOption_FDB_TR_OPTION_CAUSAL_READ_RISKY,
+            CausalReadDisable => fdb::FDBTransactionOption_FDB_TR_OPTION_CAUSAL_READ_DISABLE,
+            NextWriteNoWriteConflictRange => fdb::FDBTransactionOption_FDB_TR_OPTION_NEXT_WRITE_NO_WRITE_CONFLICT_RANGE,
+            ReadYourWritesDisable => fdb::FDBTransactionOption_FDB_TR_OPTION_READ_YOUR_WRITES_DISABLE,
+            ReadAheadDisable => fdb::FDBTransactionOption_FDB_TR_OPTION_READ_AHEAD_DISABLE,
+            DurabilityDatacenter => fdb::FDBTransactionOption_FDB_TR_OPTION_DURABILITY_DATACENTER,
+            DurabilityRisky => fdb::FDBTransactionOption_FDB_TR_OPTION_DURABILITY_RISKY,
+            DurabilityDevNullIsWebScale => fdb::FDBTransactionOption_FDB_TR_OPTION_DURABILITY_DEV_NULL_IS_WEB_SCALE,
+            PrioritySystemImmediate => fdb::FDBTransactionOption_FDB_TR_OPTION_PRIORITY_SYSTEM_IMMEDIATE,
+            PriorityBatch => fdb::FDBTransactionOption_FDB_TR_OPTION_PRIORITY_BATCH,
+            InitializeNewDatabase => fdb::FDBTransactionOption_FDB_TR_OPTION_INITIALIZE_NEW_DATABASE,
+            AccessSystemKeys => fdb::FDBTransactionOption_FDB_TR_OPTION_ACCESS_SYSTEM_KEYS,
+            ReadSystemKeys => fdb::FDBTransactionOption_FDB_TR_OPTION_READ_SYSTEM_KEYS,
+            DebugRetryLogging => fdb::FDBTransactionOption_FDB_TR_OPTION_DEBUG_RETRY_LOGGING,
+            TransactionLoggingEnable => fdb::FDBTransactionOption_FDB_TR_OPTION_TRANSACTION_LOGGING_ENABLE,
+            Timeout => fdb::FDBTransactionOption_FDB_TR_OPTION_TIMEOUT,
+            RetryLimit => fdb::FDBTransactionOption_FDB_TR_OPTION_RETRY_LIMIT,
+            MaxRetryDelay => fdb::FDBTransactionOption_FDB_TR_OPTION_MAX_RETRY_DELAY,
+            SnapshotRywEnable => fdb::FDBTransactionOption_FDB_TR_OPTION_SNAPSHOT_RYW_ENABLE,
+            SnapshotRywDisable => fdb::FDBTransactionOption_FDB_TR_OPTION_SNAPSHOT_RYW_DISABLE,
+            LockAware => fdb::FDBTransactionOption_FDB_TR_OPTION_LOCK_AWARE,
+            UsedDuringCommitProtectionDisable => fdb::FDBTransactionOption_FDB_TR_OPTION_USED_DURING_COMMIT_PROTECTION_DISABLE,
+            ReadLockAware => fdb::FDBTransactionOption_FDB_TR_OPTION_READ_LOCK_AWARE,
+        }
+    }
+}
 
 /*
  * Transaction
@@ -105,6 +163,17 @@ pub struct Transaction {
 }
 
 impl Transaction {
+    pub fn set_option(&self, option: TransactionOption, value: &[u8]) {
+        unsafe {
+            fdb::fdb_transaction_set_option(
+                self.tran,
+                option.as_c_enum(),
+                value.as_ptr(),
+                value.len() as c_int,
+            )
+        };
+    }
+
     pub async fn get<'a>(&'a self, key: &'a [u8], snapshot: bool) -> Result<Option<Value>, Error> {
         let fut = unsafe {
             fdb::fdb_transaction_get(

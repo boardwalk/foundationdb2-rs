@@ -31,7 +31,7 @@ fn main() {
         .expect("Unable to create wrapper.h")
         .write_all(
             format!(
-                "#define FDB_API_VERSION {}\n#include <fdb_c.h>\n",
+                "#define FDB_API_VERSION {}\n#include <fdb_c.h>\n#include <fdb_c_options.g.h>\n",
                 API_VERSION
             )
             .as_bytes(),
