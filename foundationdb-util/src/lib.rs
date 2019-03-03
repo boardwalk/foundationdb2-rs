@@ -1,5 +1,7 @@
 #![feature(async_await, await_macro, futures_api)]
 
+mod tuple;
+
 use foundationdb::{Database, Transaction, CommittedTransaction, Error};
 use futures::Future;
 
