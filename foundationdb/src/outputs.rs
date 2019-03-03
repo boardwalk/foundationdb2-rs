@@ -1,7 +1,6 @@
 use foundationdb_sys as fdb;
 use std::borrow::Cow;
 use std::ffi::CStr;
-use std::marker::PhantomData;
 use std::os::raw::{c_char, c_int};
 use std::slice;
 
@@ -55,25 +54,24 @@ impl Drop for Value {
 
 #[repr(C)]
 struct RawKeyValue {
-    pub(crate) key: *const u8,
-    pub(crate) key_len: c_int,
-    pub(crate) value: *const u8,
-    pub(crate) value_len: c_int,
+    key: *const u8,
+    key_len: c_int,
+    value: *const u8,
+    value_len: c_int,
 }
 
 pub struct KeyValue<'a> {
-    kv: *const fdb::FDBKeyValue,
-    _phantom: PhantomData<&'a fdb::FDBKeyValue>,
+    kv: &'a fdb::FDBKeyValue,
 }
 
 impl<'a> KeyValue<'a> {
     pub fn key(&self) -> &[u8] {
-        let kv = self.kv as *const RawKeyValue;
+        let kv = self.kv as *const _ as *const RawKeyValue;
         unsafe { slice::from_raw_parts((*kv).key, (*kv).key_len as usize) }
     }
 
     pub fn value(&self) -> &[u8] {
-        let kv = self.kv as *const RawKeyValue;
+        let kv = self.kv as *const _ as *const RawKeyValue;
         unsafe { slice::from_raw_parts((*kv).value, (*kv).value_len as usize) }
     }
 }
@@ -92,8 +90,7 @@ pub struct KeyValueArray {
 impl KeyValueArray {
     pub fn get(&self, index: usize) -> KeyValue {
         KeyValue {
-            kv: unsafe { self.kv.add(index) },
-            _phantom: PhantomData,
+            kv: unsafe { &*self.kv.add(index) }
         }
     }
 
