@@ -1,5 +1,6 @@
 use crate::error::Error;
-use crate::future::{Future, Key, KeyValueArray, StringArray, Value};
+use crate::outputs::{Key, KeyValueArray, StringArray, Value};
+use crate::future::Future;
 use crate::options::{ConflictRangeType, MutationType, StreamingMode, TransactionOption};
 use foundationdb_sys as fdb;
 use std::mem::replace;

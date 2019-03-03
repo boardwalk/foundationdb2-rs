@@ -16,12 +16,14 @@ mod error;
 mod future;
 mod network;
 mod options;
+mod outputs;
 mod transaction;
 
-pub use cluster::Cluster;
-pub use database::Database;
-pub use error::Error;
-pub use future::{Key, KeyValue, KeyValueArray, StringArray, Value};
-pub use network::Network;
+// Everything is public except future::{Future, ReadyFuture}
+pub use cluster::*;
+pub use database::*;
+pub use error::*;
+pub use network::*;
 pub use options::*;
-pub use transaction::{CommittedTransaction, FailedTransaction, GetRangeOpt, KeySelector, Transaction};
+pub use outputs::*;
+pub use transaction::*;

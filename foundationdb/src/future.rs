@@ -1,15 +1,12 @@
 use crate::error::Error;
+use crate::outputs::{Key, Value, KeyValueArray, StringArray};
 use foundationdb_sys as fdb;
 use futures;
 use futures::task::{AtomicWaker, Waker};
-use std::borrow::Cow;
-use std::ffi::CStr;
-use std::marker::PhantomData;
 use std::mem::replace;
-use std::os::raw::{c_char, c_int, c_void};
+use std::os::raw::c_void;
 use std::pin::Pin;
 use std::ptr;
-use std::slice;
 
 /*
  * Future
@@ -78,140 +75,6 @@ extern "C" fn fdb_future_callback(
 ) {
     let awaker: *const AtomicWaker = callback_parameter as *const _;
     unsafe { (*awaker).wake() };
-}
-
-/*
- * Key
- */
-
-pub struct Key {
-    fut: *mut fdb::FDBFuture,
-    key: *const u8,
-    key_len: c_int,
-}
-
-impl AsRef<[u8]> for Key {
-    fn as_ref(&self) -> &[u8] {
-        unsafe { slice::from_raw_parts(self.key, self.key_len as usize) }
-    }
-}
-
-impl Drop for Key {
-    fn drop(&mut self) {
-        unsafe { fdb::fdb_future_destroy(self.fut) };
-    }
-}
-
-/*
- * Value
- */
-
-pub struct Value {
-    fut: *mut fdb::FDBFuture,
-    val: *const u8,
-    val_len: c_int,
-}
-
-impl AsRef<[u8]> for Value {
-    fn as_ref(&self) -> &[u8] {
-        unsafe { slice::from_raw_parts(self.val, self.val_len as usize) }
-    }
-}
-
-impl Drop for Value {
-    fn drop(&mut self) {
-        unsafe { fdb::fdb_future_destroy(self.fut) };
-    }
-}
-
-/*
- * KeyValue
- */
-
-#[repr(C)]
-struct RawKeyValue {
-    key: *const u8,
-    key_len: c_int,
-    value: *const u8,
-    value_len: c_int,
-}
-
-pub struct KeyValue<'a> {
-    kv: *const fdb::FDBKeyValue,
-    _phantom: PhantomData<&'a fdb::FDBKeyValue>,
-}
-
-impl<'a> KeyValue<'a> {
-    pub fn key(&self) -> &[u8] {
-        let kv = self.kv as *const RawKeyValue;
-        unsafe { slice::from_raw_parts((*kv).key, (*kv).key_len as usize) }
-    }
-
-    pub fn value(&self) -> &[u8] {
-        let kv = self.kv as *const RawKeyValue;
-        unsafe { slice::from_raw_parts((*kv).value, (*kv).value_len as usize) }
-    }
-}
-
-/*
- * KeyValueArray
- */
-
-pub struct KeyValueArray {
-    fut: *mut fdb::FDBFuture,
-    kv: *const fdb::FDBKeyValue,
-    count: c_int,
-    more: fdb::fdb_bool_t,
-}
-
-impl KeyValueArray {
-    pub fn get(&self, index: usize) -> KeyValue {
-        KeyValue {
-            kv: unsafe { self.kv.add(index) },
-            _phantom: PhantomData,
-        }
-    }
-
-    pub fn len(&self) -> usize {
-        self.count as usize
-    }
-
-    pub fn more(&self) -> bool {
-        self.more != 0
-    }
-}
-
-impl Drop for KeyValueArray {
-    fn drop(&mut self) {
-        unsafe { fdb::fdb_future_destroy(self.fut) };
-    }
-}
-
-/*
- * StringArray
- */
-
-pub struct StringArray {
-    fut: *mut fdb::FDBFuture,
-    strings: *mut *const c_char,
-    count: c_int,
-}
-
-impl StringArray {
-    pub fn get(&self, index: usize) -> Cow<str> {
-        let s = unsafe { CStr::from_ptr(*self.strings.add(index)) };
-        s.to_string_lossy()
-    }
-
-    pub fn len(&self) -> usize {
-        self.count as usize
-    }
-}
-
-impl Drop for StringArray {
-    fn drop(&mut self) {
-        unsafe { fdb::fdb_future_destroy(self.fut) };
-    }
 }
 
 /*
