@@ -1,4 +1,5 @@
 use crate::error::Error;
+use crate::options::NetworkOption;
 use foundationdb_sys as fdb;
 use std::os::raw::c_int;
 use std::thread::{self, JoinHandle};
@@ -13,6 +14,18 @@ pub struct Network {
 }
 
 impl Network {
+    pub fn set_option(option: NetworkOption, value: &[u8]) -> Result<(), Error> {
+        bail!(unsafe {
+            fdb::fdb_network_set_option(
+                option.as_c_enum(),
+                value.as_ptr(),
+                value.len() as c_int,
+            )
+        });
+
+        Ok(())
+    }
+
     pub fn new() -> Result<Self, Error> {
         bail!(unsafe {
             fdb::fdb_select_api_version_impl(

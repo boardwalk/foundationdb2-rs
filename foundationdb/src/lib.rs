@@ -15,6 +15,7 @@ mod database;
 mod error;
 mod future;
 mod network;
+mod options;
 mod transaction;
 
 pub use cluster::Cluster;
@@ -22,7 +23,8 @@ pub use database::Database;
 pub use error::Error;
 pub use future::{Key, KeyValue, KeyValueArray, StringArray, Value};
 pub use network::Network;
-pub use transaction::{GetRangeOpt, KeySelector, MutationType, StreamingMode, Transaction};
+pub use options::*;
+pub use transaction::{GetRangeOpt, KeySelector, Transaction};
 
 #[cfg(test)]
 mod test {
