@@ -1,12 +1,12 @@
 use crate::error::Error;
 use crate::outputs::{Key, Value, KeyValueArray, StringArray};
 use foundationdb_sys as fdb;
-use futures;
+use futures::{self, Poll};
 use futures::task::{AtomicWaker, Waker};
 use std::mem::replace;
 use std::os::raw::c_void;
 use std::pin::Pin;
-use std::ptr;
+use std::ptr::{null, null_mut};
 
 /*
  * Future
@@ -31,7 +31,7 @@ impl Future {
 impl futures::Future for Future {
     type Output = Result<ReadyFuture, Error>;
 
-    fn poll(mut self: Pin<&mut Self>, waker: &Waker) -> futures::Poll<Self::Output> {
+    fn poll(mut self: Pin<&mut Self>, waker: &Waker) -> Poll<Self::Output> {
         debug_assert!(!self.fut.is_null());
 
         let ready = unsafe { fdb::fdb_future_is_ready(self.fut) };
@@ -48,16 +48,16 @@ impl futures::Future for Future {
                 }
             }
 
-            return futures::Poll::Pending;
+            return Poll::Pending;
         }
 
         let err = unsafe { fdb::fdb_future_get_error(self.fut) };
         if err != 0 {
-            return futures::Poll::Ready(Err(Error { err }));
+            return Poll::Ready(Err(Error { err }));
         }
 
-        let res = ReadyFuture::new(replace(&mut self.fut, ptr::null_mut()));
-        futures::Poll::Ready(Ok(res))
+        let res = ReadyFuture::new(replace(&mut self.fut, null_mut()));
+        Poll::Ready(Ok(res))
     }
 }
 
@@ -91,23 +91,23 @@ impl ReadyFuture {
     }
 
     pub fn into_cluster(self) -> Result<*mut fdb::FDBCluster, Error> {
-        let mut val = ptr::null_mut();
+        let mut val = null_mut();
         bail!(unsafe { fdb::fdb_future_get_cluster(self.fut, &mut val) });
         Ok(val)
     }
 
     pub fn into_database(self) -> Result<*mut fdb::FDBDatabase, Error> {
-        let mut val = ptr::null_mut();
+        let mut val = null_mut();
         bail!(unsafe { fdb::fdb_future_get_database(self.fut, &mut val) });
         Ok(val)
     }
 
     pub fn into_key(mut self) -> Result<Key, Error> {
-        let mut key = ptr::null();
+        let mut key = null();
         let mut key_len = 0;
         bail!(unsafe { fdb::fdb_future_get_key(self.fut, &mut key, &mut key_len) });
         Ok(Key {
-            fut: replace(&mut self.fut, ptr::null_mut()),
+            fut: replace(&mut self.fut, null_mut()),
             key,
             key_len,
         })
@@ -115,12 +115,12 @@ impl ReadyFuture {
 
     pub fn into_value(mut self) -> Result<Option<Value>, Error> {
         let mut present = 0;
-        let mut val = ptr::null();
+        let mut val = null();
         let mut val_len = 0;
         bail!(unsafe { fdb::fdb_future_get_value(self.fut, &mut present, &mut val, &mut val_len) });
         if present != 0 {
             Ok(Some(Value {
-                fut: replace(&mut self.fut, ptr::null_mut()),
+                fut: replace(&mut self.fut, null_mut()),
                 val,
                 val_len,
             }))
@@ -130,12 +130,12 @@ impl ReadyFuture {
     }
 
     pub fn into_keyvalue_array(mut self) -> Result<KeyValueArray, Error> {
-        let mut kv = ptr::null();
+        let mut kv = null();
         let mut count = 0;
         let mut more = 0;
         bail!(unsafe { fdb::fdb_future_get_keyvalue_array(self.fut, &mut kv, &mut count, &mut more) });
         Ok(KeyValueArray {
-            fut: replace(&mut self.fut, ptr::null_mut()),
+            fut: replace(&mut self.fut, null_mut()),
             kv,
             count,
             more,
@@ -149,11 +149,11 @@ impl ReadyFuture {
     }
 
     pub fn into_string_array(mut self) -> Result<StringArray, Error> {
-        let mut strings = ptr::null_mut();
+        let mut strings = null_mut();
         let mut count = 0;
         bail!(unsafe { fdb::fdb_future_get_string_array(self.fut, &mut strings, &mut count) });
         Ok(StringArray {
-            fut: replace(&mut self.fut, ptr::null_mut()),
+            fut: replace(&mut self.fut, null_mut()),
             strings,
             count,
         })

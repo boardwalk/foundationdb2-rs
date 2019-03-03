@@ -5,7 +5,7 @@ use crate::options::{ConflictRangeType, MutationType, StreamingMode, Transaction
 use foundationdb_sys as fdb;
 use std::mem::replace;
 use std::os::raw::c_int;
-use std::ptr;
+use std::ptr::null_mut;
 
 pub struct KeySelector<'a> {
     key: &'a [u8],
@@ -149,10 +149,10 @@ impl Transaction {
         let fut = unsafe { fdb::fdb_transaction_commit(self.tran) };
         match await!(Future::new(fut)) {
             Ok(_) => Ok(CommittedTransaction {
-                tran: replace(&mut self.tran, ptr::null_mut()),
+                tran: replace(&mut self.tran, null_mut()),
             }),
             Err(err) => Err(FailedTransaction {
-                tran: replace(&mut self.tran, ptr::null_mut()),
+                tran: replace(&mut self.tran, null_mut()),
                 err: err.err,
             }),
         }
@@ -270,7 +270,7 @@ impl FailedTransaction {
         match await!(Future::new(fut)) {
             Ok(_) => {
                 Ok(Transaction {
-                    tran: replace(&mut self.tran, ptr::null_mut()),
+                    tran: replace(&mut self.tran, null_mut()),
                 })
             }
             Err(err) => {
