@@ -18,6 +18,7 @@ impl Database {
                 option.as_c_enum(),
                 value.as_ptr(),
                 value.len() as c_int,
+            )
         });
 
         Ok(())
@@ -40,12 +41,10 @@ impl Database {
             tran = await!(f(tran))?;
             match await!(tran.commit()) {
                 Ok(t) => return Ok(t),
-                Err(t) => {
-                    match await!(t.on_error()) {
-                        Ok(t) => tran = t,
-                        Err(t) => return Err(t.into_error()),
-                    }
-                }
+                Err(t) => match await!(t.on_error()) {
+                    Ok(t) => tran = t,
+                    Err(t) => return Err(t.into_error()),
+                },
             }
         }
     }

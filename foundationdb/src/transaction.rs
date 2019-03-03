@@ -1,10 +1,10 @@
 use crate::error::Error;
 use crate::future::{Future, Key, KeyValueArray, StringArray, Value};
+use crate::options::{ConflictRangeType, MutationType, StreamingMode, TransactionOption};
 use foundationdb_sys as fdb;
 use std::mem::replace;
 use std::os::raw::c_int;
 use std::ptr;
-use crate::options::{ConflictRangeType, StreamingMode, MutationType, TransactionOption};
 
 pub struct KeySelector<'a> {
     key: &'a [u8],
