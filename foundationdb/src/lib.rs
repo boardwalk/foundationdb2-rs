@@ -16,7 +16,6 @@ mod error;
 mod future;
 mod network;
 mod transaction;
-mod utils;
 
 pub use cluster::Cluster;
 pub use database::Database;
@@ -24,7 +23,6 @@ pub use error::Error;
 pub use future::{Key, KeyValue, KeyValueArray, StringArray, Value};
 pub use network::Network;
 pub use transaction::{GetRangeOpt, KeySelector, MutationType, StreamingMode, Transaction};
-pub use utils::retry;
 
 #[cfg(test)]
 mod test {
@@ -43,16 +41,18 @@ mod test {
 
         let cluster = await!(Cluster::new("/Users/boardwalk/Code/foundationdb-build/fdb.cluster"))?;
         let database = await!(cluster.create_database())?;
-        let transaction = database.create_transaction()?;
 
-        transaction.set(b"hello", b"world");
+        await!(database.transact(|tran| async {
+            tran.set(b"hello", b"world");
 
-        let value = await!(transaction.get(b"hello", false))?;
+            let value = await!(tran.get(b"hello", false))?;
 
-        assert_eq!(value.as_ref().map(|v| v.as_ref()), Some(&b"world"[..]));
+            assert_eq!(value.as_ref().map(|v| v.as_ref()), Some(&b"world"[..]));
 
-        transaction.clear(b"hello");
-        await!(transaction.commit())?;
+            tran.clear(b"hello");
+
+            Ok(tran)
+        }))?;
 
         Ok(())
     }

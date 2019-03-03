@@ -37,23 +37,20 @@ impl futures::Future for Future {
     fn poll(mut self: Pin<&mut Self>, waker: &Waker) -> futures::Poll<Self::Output> {
         debug_assert!(!self.fut.is_null());
 
-        if !self.registered {
-            self.waker.register(waker);
-
-            unsafe {
-                fdb::fdb_future_set_callback(
-                    self.fut,
-                    Some(fdb_future_callback),
-                    &self.waker as *const _ as *mut _,
-                );
-            }
-
-            self.registered = true;
-            return futures::Poll::Pending;
-        }
-
         let ready = unsafe { fdb::fdb_future_is_ready(self.fut) };
         if ready == 0 {
+            self.waker.register(waker);
+
+            if !replace(&mut self.registered, true) {
+                unsafe {
+                    fdb::fdb_future_set_callback(
+                        self.fut,
+                        Some(fdb_future_callback),
+                        &self.waker as *const _ as *mut _,
+                    );
+                }
+            }
+
             return futures::Poll::Pending;
         }
 

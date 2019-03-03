@@ -324,10 +324,14 @@ pub struct FailedTransaction {
 }
 
 impl FailedTransaction {
-    pub async fn on_error(mut self) -> Result<(), FailedTransaction> {
+    pub async fn on_error(mut self) -> Result<Transaction, FailedTransaction> {
         let fut = unsafe { fdb::fdb_transaction_on_error(self.tran, self.err) };
         match await!(Future::new(fut)) {
-            Ok(_) => Ok(()),
+            Ok(_) => {
+                Ok(Transaction {
+                    tran: replace(&mut self.tran, ptr::null_mut()),
+                })
+            }
             Err(err) => {
                 self.err = err.err;
                 Err(self)
@@ -342,6 +346,8 @@ impl FailedTransaction {
 
 impl Drop for FailedTransaction {
     fn drop(&mut self) {
-        unsafe { fdb::fdb_transaction_destroy(self.tran) };
+        if !self.tran.is_null() {
+            unsafe { fdb::fdb_transaction_destroy(self.tran) };
+        }
     }
 }
