@@ -1,6 +1,7 @@
 use foundationdb_sys as fdb;
 use std::borrow::Cow;
 use std::ffi::CStr;
+use std::mem::size_of;
 use std::os::raw::{c_char, c_int};
 use std::slice;
 
@@ -64,6 +65,7 @@ pub struct KeyValue<'a> {
     kv: &'a fdb::FDBKeyValue,
 }
 
+#[allow(clippy::cast_ptr_alignment)]
 impl<'a> KeyValue<'a> {
     pub fn key(&self) -> &[u8] {
         let kv = self.kv as *const _ as *const RawKeyValue;
@@ -89,6 +91,7 @@ pub struct KeyValueArray {
 
 impl KeyValueArray {
     pub fn get(&self, index: usize) -> KeyValue {
+        debug_assert_eq!(size_of::<RawKeyValue>(), size_of::<fdb::FDBKeyValue>());
         KeyValue {
             kv: unsafe { &*self.kv.add(index) }
         }
@@ -96,6 +99,10 @@ impl KeyValueArray {
 
     pub fn len(&self) -> usize {
         self.count as usize
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.count != 0
     }
 
     pub fn more(&self) -> bool {
@@ -127,6 +134,10 @@ impl StringArray {
 
     pub fn len(&self) -> usize {
         self.count as usize
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.count != 0
     }
 }
 
