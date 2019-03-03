@@ -1,0 +1,9 @@
+[package]
+name = "foundationdb-util"
+version = "0.1.0"
+authors = ["Dan Skorupski <boardwalk@ersatsz.com"]
+edition = "2018"
+
+[dependencies]
+foundationdb = { path = "../foundationdb" }
+futures-preview = "0.3.0-alpha.13"

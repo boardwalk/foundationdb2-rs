@@ -1,2 +1,2 @@
 [workspace]
-members = ["foundationdb", "foundationdb-sys"]
+members = ["foundationdb", "foundationdb-sys", "foundationdb-util"]
