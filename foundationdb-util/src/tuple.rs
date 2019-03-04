@@ -23,11 +23,11 @@ pub enum UnpackError {
 }
 
 pub trait TuplePack {
-    fn encode(&self, out: &mut Vec<u8>, nested: bool);
+    fn pack(&self, out: &mut Vec<u8>, nested: bool);
 }
 
 pub trait TupleUnpack: Sized {
-    fn decode(inp: &[u8], nested: bool) -> Result<(Self, &[u8]), UnpackError>;
+    fn unpack(inp: &[u8], nested: bool) -> Result<(Self, &[u8]), UnpackError>;
 }
 
 fn expect(inp: &[u8], expected: u8) -> Result<&[u8], UnpackError> {
@@ -75,14 +75,14 @@ fn read_bytes(inp: &[u8]) -> (Vec<u8>, &[u8]) {
 }
 
 impl TuplePack for [u8] {
-    fn encode(&self, out: &mut Vec<u8>, _nested: bool) {
+    fn pack(&self, out: &mut Vec<u8>, _nested: bool) {
         out.push(BYTES_CODE);
         write_bytes(self, out);
     }
 }
 
 impl TupleUnpack for Vec<u8> {
-    fn decode(inp: &[u8], _nested: bool) -> Result<(Self, &[u8]), UnpackError> {
+    fn unpack(inp: &[u8], _nested: bool) -> Result<(Self, &[u8]), UnpackError> {
         let inp = expect(inp, BYTES_CODE)?;
         let (vec, inp) = read_bytes(inp);
         Ok((vec, inp))
@@ -90,14 +90,14 @@ impl TupleUnpack for Vec<u8> {
 }
 
 impl TuplePack for str {
-    fn encode(&self, out: &mut Vec<u8>, _nested: bool) {
+    fn pack(&self, out: &mut Vec<u8>, _nested: bool) {
         out.push(STRING_CODE);
         write_bytes(self.as_bytes(), out);
     }
 }
 
 impl TupleUnpack for String {
-    fn decode(inp: &[u8], _nested: bool) -> Result<(Self, &[u8]), UnpackError> {
+    fn unpack(inp: &[u8], _nested: bool) -> Result<(Self, &[u8]), UnpackError> {
         let inp = expect(inp, STRING_CODE)?;
         let (vec, inp) = read_bytes(inp);
         match String::from_utf8(vec) {
@@ -108,13 +108,13 @@ impl TupleUnpack for String {
 }
 
 impl TuplePack for bool {
-    fn encode(&self, key: &mut Vec<u8>, _nested: bool) {
+    fn pack(&self, key: &mut Vec<u8>, _nested: bool) {
         key.push(if *self { TRUE_CODE } else { FALSE_CODE });
     }
 }
 
 impl TupleUnpack for bool {
-    fn decode(inp: &[u8], _nested: bool) -> Result<(Self, &[u8]), UnpackError> {
+    fn unpack(inp: &[u8], _nested: bool) -> Result<(Self, &[u8]), UnpackError> {
         if let Some((&code, inp)) = inp.split_first() {
             if code == TRUE_CODE {
                 Ok((true, inp))
@@ -134,11 +134,11 @@ where
     T1: TuplePack,
     T2: TuplePack,
 {
-    fn encode(&self, out: &mut Vec<u8>, nested: bool) {
+    fn pack(&self, out: &mut Vec<u8>, nested: bool) {
         let (v1, v2) = self;
         if nested { out.push(NESTED_CODE);  }
-        T1::encode(v1, out, true);
-        T2::encode(v2, out, true);
+        T1::pack(v1, out, true);
+        T2::pack(v2, out, true);
         if nested { out.push(0x00); }
     }
 }
@@ -148,17 +148,17 @@ where
     T1: TupleUnpack,
     T2: TupleUnpack,
 {
-    fn decode(inp: &[u8], nested: bool) -> Result<(Self, &[u8]), UnpackError> {
+    fn unpack(inp: &[u8], nested: bool) -> Result<(Self, &[u8]), UnpackError> {
         let inp = if nested { expect(inp, NESTED_CODE)? } else { inp };
-        let (v1, inp) = T1::decode(inp, true)?;
-        let (v2, inp) = T2::decode(inp, true)?;
+        let (v1, inp) = T1::unpack(inp, true)?;
+        let (v2, inp) = T2::unpack(inp, true)?;
         let inp = if nested { expect(inp, 0x00)? } else { inp };
         Ok(((v1, v2), inp))
     }
 }
 
 impl TuplePack for i64 {
-    fn encode(&self, out: &mut Vec<u8>, _nested: bool) {
+    fn pack(&self, out: &mut Vec<u8>, _nested: bool) {
         if *self == 0 {
             out.push(INT_ZERO_CODE);
         } else {
@@ -177,7 +177,7 @@ impl TuplePack for i64 {
 }
 
 impl TupleUnpack for i64 {
-    fn decode(inp: &[u8], _nested: bool) -> Result<(Self, &[u8]), UnpackError> {
+    fn unpack(inp: &[u8], _nested: bool) -> Result<(Self, &[u8]), UnpackError> {
         if let Some((&code, inp)) = inp.split_first() {
             if code == INT_ZERO_CODE {
                 Ok((0, inp))
@@ -216,8 +216,8 @@ mod tests {
         Tin: PartialEq<Tout>,
     {
         buf.clear();
-        TuplePack::encode(&in_val, buf, false);
-        let (out_val, rest) = <Tout as TupleUnpack>::decode(&buf, false).unwrap();
+        TuplePack::pack(&in_val, buf, false);
+        let (out_val, rest) = <Tout as TupleUnpack>::unpack(&buf, false).unwrap();
         assert_eq!(in_val, out_val);
         assert!(rest.is_empty());
     }
