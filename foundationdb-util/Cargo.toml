@@ -5,5 +5,9 @@ authors = ["Dan Skorupski <boardwalk@ersatsz.com"]
 edition = "2018"
 
 [dependencies]
+byteorder = "1.3"
 foundationdb = { path = "../foundationdb" }
 futures-preview = "0.3.0-alpha.13"
+
+[dev-dependencies]
+rand = "0.6"
