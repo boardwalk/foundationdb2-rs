@@ -10,6 +10,7 @@ mod versionstamp;
 
 use std::string::FromUtf8Error;
 use std::num::TryFromIntError;
+use std::convert::Infallible;
 
 #[derive(Debug)]
 pub enum UnpackError {
@@ -32,8 +33,8 @@ impl From<TryFromIntError> for UnpackError {
 }
 
 // Required by silly things like u64::try_from(u64)
-impl From<()> for UnpackError {
-    fn from(_: ()) -> Self {
+impl From<Infallible> for UnpackError {
+    fn from(_: Infallible) -> Self {
         unreachable!()
     }
 }
