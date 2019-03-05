@@ -2,8 +2,11 @@ use crate::tuple::{TuplePack, TupleUnpack, UnpackError};
 use byteorder::{ByteOrder, BigEndian};
 use std::convert::TryFrom;
 
+// This value is used (unused by us) for a 9+ byte negative integer
 const NEG_INT_START: u8 = 0x0b;
+// This value is used for exactly zero
 const INT_ZERO_CODE: u8 = 0x14;
+// This value is used (unused by us) for a 9+ byte positive integer
 const POS_INT_END: u8 = 0x1d;
 
 fn pack_int(inp: i64, out: &mut Vec<u8>) {
@@ -43,7 +46,7 @@ fn pack_uint(inp: u64, out: &mut Vec<u8>) {
 
 fn unpack_int(inp: &[u8]) -> Result<(i64, &[u8]), UnpackError> {
     if let Some((&code, inp)) = inp.split_first() {
-        if code > NEG_INT_START && code <= POS_INT_END {
+        if code > NEG_INT_START && code < POS_INT_END {
             let nbytes = if code >= INT_ZERO_CODE {
                 (code - INT_ZERO_CODE) as usize
             } else {
@@ -76,7 +79,7 @@ fn unpack_int(inp: &[u8]) -> Result<(i64, &[u8]), UnpackError> {
 
 fn unpack_uint(inp: &[u8]) -> Result<(u64, &[u8]), UnpackError> {
     if let Some((&code, inp)) = inp.split_first() {
-        if code >= INT_ZERO_CODE && code <= POS_INT_END {
+        if code >= INT_ZERO_CODE && code < POS_INT_END {
             let nbytes = (code - INT_ZERO_CODE) as usize;
 
             if inp.len() < nbytes {
