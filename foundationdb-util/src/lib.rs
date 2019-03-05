@@ -1,4 +1,5 @@
 #![feature(async_await, await_macro, futures_api)]
+#![feature(try_from)]
 
 mod tuple;
 
