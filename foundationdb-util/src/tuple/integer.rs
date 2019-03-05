@@ -6,20 +6,19 @@ const INT_ZERO_CODE: u8 = 0x14;
 const POS_INT_END: u8 = 0x1d;
 
 fn pack_int(inp: i64, out: &mut Vec<u8>) {
+    let nbytes = ((64 - inp.wrapping_abs().leading_zeros() + 7) / 8) as usize;
     if inp >= 0 {
-        let nbytes = ((64 - inp.leading_zeros() + 7) / 8) as usize;
         out.push(INT_ZERO_CODE + nbytes as u8);
 
         let mut buf = [0; 8];
         BigEndian::write_i64(&mut buf, inp);
         out.extend_from_slice(&buf[8 - nbytes..]);
     } else {
-        let nbytes = ((64 - inp.wrapping_neg().leading_zeros() + 7) / 8) as usize;
         out.push(INT_ZERO_CODE - nbytes as u8);
 
         let max_value = 1i64.checked_shl(nbytes as u32 * 8).unwrap_or(0).wrapping_sub(1);
         let mut buf = [0; 8];
-        BigEndian::write_i64(&mut buf, max_value + inp);
+        BigEndian::write_i64(&mut buf, max_value.wrapping_add(inp));
         out.extend_from_slice(&buf[8 - nbytes..]);
     }
 }
@@ -46,7 +45,7 @@ fn unpack_int(inp: &[u8]) -> Result<(i64, &[u8]), UnpackError> {
             let max_value = 1i64.checked_shl(nbytes as u32 * 8).unwrap_or(0).wrapping_sub(1);
             let mut buf = [0; 8];
             buf[8 - nbytes..].copy_from_slice(&inp[..nbytes]);
-            let out = BigEndian::read_i64(&buf) - max_value;
+            let out = BigEndian::read_i64(&buf).wrapping_sub(max_value);
 
             Ok((out, &inp[nbytes..]))
         } else {
@@ -62,16 +61,23 @@ mod test {
     use rand::random;
     use super::{pack_int, unpack_int};
 
+    fn test_one(in_val: i64, buf: &mut Vec<u8>) {
+        buf.clear();
+        pack_int(in_val, buf);
+        let (out_val, rest) = unpack_int(buf).unwrap();
+        assert_eq!(in_val, out_val);
+        assert!(rest.is_empty());
+    }
+
     #[test]
     fn pack_unpack_int() {
         let mut buf = Vec::new();
+        test_one(i64::min_value(), &mut buf);
+        test_one(i64::max_value(), &mut buf);
+        test_one(0, &mut buf);
         for _ in 0..100000 {
             let in_val = random::<i64>();
-            buf.clear();
-            pack_int(in_val, &mut buf);
-            let (out_val, rest) = unpack_int(&buf).unwrap();
-            assert_eq!(in_val, out_val);
-            assert!(rest.is_empty());
+            test_one(in_val, &mut buf);
         }
     }
 }
