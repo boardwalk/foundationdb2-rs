@@ -172,6 +172,18 @@ mod test {
         assert!(rest.is_empty());
     }
 
+    fn test_pack_int(in_val: i64, out_bytes: &[u8]) {
+        let mut buf = Vec::new();
+        pack_int(in_val, &mut buf);
+        assert_eq!(&buf[..], out_bytes);
+    }
+
+    fn test_pack_uint(in_val: u64, out_bytes: &[u8]) {
+        let mut buf = Vec::new();
+        pack_uint(in_val, &mut buf);
+        assert_eq!(&buf[..], out_bytes);
+    }
+
     #[test]
     fn pack_unpack_int() {
         let mut buf = Vec::new();
@@ -199,5 +211,37 @@ mod test {
             let in_val = random::<u64>();
             test_uint(in_val, &mut buf);
         }
+    }
+
+    #[test]
+    fn pack_int_testcases() {
+        // PYTHONPATH=$FDB_PATH/bindings/python python3
+        // from fdb.tuple import _encode
+        // from binascii import hexlify
+        // (b, _) = _encode(x); print(hexlify(b))
+        test_pack_int(-314159265, &[0x10, 0xed, 0x46, 0x4f, 0x5e]);
+        test_pack_int(-2, &[0x13, 0xfd]);
+        test_pack_int(-1, &[0x13, 0xfe]);
+        test_pack_int(0, &[0x14]);
+        test_pack_int(1, &[0x15, 0x01]);
+        test_pack_int(2, &[0x15, 0x02]);
+        test_pack_int(123, &[0x15, 0x7b]);
+        test_pack_int(123456789, &[0x18, 0x07, 0x5b, 0xcd, 0x15]);
+        test_pack_int(i64::min_value(), &[0x0c, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]);
+        test_pack_int(i64::max_value(), &[0x1c, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]);
+    }
+
+    #[test]
+    fn pack_uint_testcases() {
+        test_pack_uint(0, &[0x14]);
+        test_pack_uint(1, &[0x15, 0x01]);
+        test_pack_uint(2, &[0x15, 0x02]);
+        test_pack_uint(123, &[0x15, 0x7b]);
+        test_pack_uint(123456789, &[0x18, 0x07, 0x5b, 0xcd, 0x15]);
+        test_pack_uint(i64::max_value() as u64, &[0x1c, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]);
+        test_pack_uint(u64::max_value(), &[0x1c, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe])
+        // Apple's fdb.tuple encodes this slightly less normalized, as [0x1d, 0x08, 0xff, ...]
+        // Why? I don't know. It'll still decode this more compact representation
+        test_pack_uint(u64::max_value(), &[0x1c, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]);
     }
 }
