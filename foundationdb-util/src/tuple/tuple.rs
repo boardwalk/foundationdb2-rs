@@ -33,7 +33,11 @@ where
         };
         let (v1, inp) = T1::unpack(inp, true)?;
         let (v2, inp) = T2::unpack(inp, true)?;
-        let inp = if nested { expect(inp, 0x00)? } else { inp };
+        let inp = if nested {
+            expect(inp, 0x00)?
+        } else {
+            inp
+        };
         Ok(((v1, v2), inp))
     }
 }
