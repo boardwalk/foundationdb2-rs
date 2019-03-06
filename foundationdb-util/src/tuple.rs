@@ -61,7 +61,7 @@ pub(crate) fn expect(inp: &[u8], expected: u8) -> Result<&[u8], UnpackError> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Pack, Unpack};
+    use crate::tuple::{Pack, Unpack};
     use std::fmt::Debug;
 
     fn test_pack_unpack<T>(in_val: T, buf: &mut Vec<u8>)

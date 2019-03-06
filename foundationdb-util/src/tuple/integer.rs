@@ -153,7 +153,7 @@ impl_u!(u64);
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    use crate::tuple::integer::{pack_int, pack_uint, unpack_int, unpack_uint};
     use rand::random;
 
     fn test_int(in_val: i64, buf: &mut Vec<u8>) {
@@ -239,7 +239,7 @@ mod test {
         test_pack_uint(123, &[0x15, 0x7b]);
         test_pack_uint(123456789, &[0x18, 0x07, 0x5b, 0xcd, 0x15]);
         test_pack_uint(i64::max_value() as u64, &[0x1c, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]);
-        test_pack_uint(u64::max_value(), &[0x1c, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe])
+        test_pack_uint(u64::max_value() - 1, &[0x1c, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe]);
         // Apple's fdb.tuple encodes this slightly less normalized, as [0x1d, 0x08, 0xff, ...]
         // Why? I don't know. It'll still decode this more compact representation
         test_pack_uint(u64::max_value(), &[0x1c, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]);

@@ -26,7 +26,7 @@ where
 
 #[cfg(test)]
 mod test {
-    use super::transact;
+    use crate::transact;
     use foundationdb::{Cluster, Error, Network};
     use futures::executor::block_on;
 
