@@ -6,14 +6,14 @@ use uuid::{Bytes, Uuid};
 const UUID_CODE: u8 = 0x30;
 
 impl TuplePack for Uuid {
-    fn pack(&self, out: &mut Vec<u8>, nested: bool) {
+    fn pack(&self, out: &mut Vec<u8>, _nested: bool) {
         out.push(UUID_CODE);
         out.extend_from_slice(self.as_bytes());
     }
 }
 
 impl TupleUnpack for Uuid {
-    fn unpack(inp: &[u8], nested: bool) -> Result<(Self, &[u8]), UnpackError> {
+    fn unpack(inp: &[u8], _nested: bool) -> Result<(Self, &[u8]), UnpackError> {
         let inp = expect(inp, UUID_CODE)?;
 
         if inp.len() < size_of::<Bytes>() {
@@ -25,3 +25,5 @@ impl TupleUnpack for Uuid {
         Ok((out, inp))
     }
 }
+
+// TODO: Test Uuid

@@ -65,3 +65,46 @@ impl TupleUnpack for String {
         Ok((s, inp))
     }
 }
+
+#[cfg(test)]
+mod test {
+    use rand::{thread_rng, Rng};
+    use rand::distributions::{Alphanumeric, Standard};
+    use crate::tuple::{TuplePack, TupleUnpack};
+
+    #[test]
+    fn test_bytes() {
+        let mut buf = Vec::new();
+        let mut rng = thread_rng();
+        for _ in 0..10000 {
+            let nbytes = rng.gen_range(0, 64);
+            let in_val = rng.sample_iter(&Standard).take(nbytes).collect::<Vec<u8>>();
+
+            buf.clear();
+            TuplePack::pack(&in_val[..], &mut buf, false);
+
+            let (out_val, rest) = <Vec<u8> as TupleUnpack>::unpack(&buf, false).unwrap();
+
+            assert_eq!(in_val, out_val);
+            assert!(rest.is_empty());
+        }
+    }
+
+    #[test]
+    fn test_string() {
+        let mut buf = Vec::new();
+        let mut rng = thread_rng();
+        for _ in 0..10000 {
+            let nchars = rng.gen_range(0, 64);
+            let in_val = rng.sample_iter(&Alphanumeric).take(nchars).collect::<String>();
+
+            buf.clear();
+            TuplePack::pack(in_val.as_str(), &mut buf, false);
+
+            let (out_val, rest) = <String as TupleUnpack>::unpack(&buf, false).unwrap();
+
+            assert_eq!(in_val, out_val);
+            assert!(rest.is_empty());
+        }
+    }
+}
