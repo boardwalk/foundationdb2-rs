@@ -172,18 +172,6 @@ mod test {
         assert!(rest.is_empty());
     }
 
-    fn test_pack_int(in_val: i64, out_bytes: &[u8]) {
-        let mut buf = Vec::new();
-        pack_int(in_val, &mut buf);
-        assert_eq!(&buf[..], out_bytes);
-    }
-
-    fn test_pack_uint(in_val: u64, out_bytes: &[u8]) {
-        let mut buf = Vec::new();
-        pack_uint(in_val, &mut buf);
-        assert_eq!(&buf[..], out_bytes);
-    }
-
     #[test]
     fn pack_unpack_int() {
         let mut buf = Vec::new();
@@ -213,12 +201,25 @@ mod test {
         }
     }
 
+    // PYTHONPATH=$FDB_PATH/bindings/python python3
+    // from fdb.tuple import _encode
+    // from binascii import hexlify
+    // (b, _) = _encode(x); print(hexlify(b))
+
+    fn test_pack_int(in_val: i64, out_bytes: &[u8]) {
+        let mut buf = Vec::new();
+        pack_int(in_val, &mut buf);
+        assert_eq!(&buf[..], out_bytes);
+    }
+
+    fn test_pack_uint(in_val: u64, out_bytes: &[u8]) {
+        let mut buf = Vec::new();
+        pack_uint(in_val, &mut buf);
+        assert_eq!(&buf[..], out_bytes);
+    }
+
     #[test]
     fn pack_int_testcases() {
-        // PYTHONPATH=$FDB_PATH/bindings/python python3
-        // from fdb.tuple import _encode
-        // from binascii import hexlify
-        // (b, _) = _encode(x); print(hexlify(b))
         test_pack_int(-314159265, &[0x10, 0xed, 0x46, 0x4f, 0x5e]);
         test_pack_int(-2, &[0x13, 0xfd]);
         test_pack_int(-1, &[0x13, 0xfe]);
