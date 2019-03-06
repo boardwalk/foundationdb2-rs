@@ -94,5 +94,6 @@ mod tests {
     fn test_tuple() {
         let mut buf = Vec::new();
         test_pack_unpack((42, true), &mut buf);
+        test_pack_unpack((1, (2, 3)), &mut buf);
     }
 }
