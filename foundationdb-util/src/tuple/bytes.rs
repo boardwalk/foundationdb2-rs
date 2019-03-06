@@ -68,9 +68,9 @@ impl TupleUnpack for String {
 
 #[cfg(test)]
 mod test {
-    use rand::{thread_rng, Rng};
-    use rand::distributions::{Alphanumeric, Standard};
     use crate::tuple::{TuplePack, TupleUnpack};
+    use rand::distributions::{Alphanumeric, Standard};
+    use rand::{thread_rng, Rng};
 
     #[test]
     fn test_bytes() {
@@ -96,7 +96,10 @@ mod test {
         let mut rng = thread_rng();
         for _ in 0..10000 {
             let nchars = rng.gen_range(0, 64);
-            let in_val = rng.sample_iter(&Alphanumeric).take(nchars).collect::<String>();
+            let in_val = rng
+                .sample_iter(&Alphanumeric)
+                .take(nchars)
+                .collect::<String>();
 
             buf.clear();
             TuplePack::pack(in_val.as_str(), &mut buf, false);

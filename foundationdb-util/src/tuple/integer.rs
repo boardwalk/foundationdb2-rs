@@ -1,5 +1,5 @@
 use crate::tuple::{TuplePack, TupleUnpack, UnpackError};
-use byteorder::{ByteOrder, BigEndian};
+use byteorder::{BigEndian, ByteOrder};
 use std::convert::TryFrom;
 
 // This value is used (unused by us) for a 9+ byte negative integer
@@ -21,7 +21,10 @@ fn pack_int(inp: i64, out: &mut Vec<u8>) {
     let val = if inp >= 0 {
         inp
     } else {
-        let max_value = 1i64.checked_shl(nbytes as u32 * 8).unwrap_or(0).wrapping_sub(1);
+        let max_value = 1i64
+            .checked_shl(nbytes as u32 * 8)
+            .unwrap_or(0)
+            .wrapping_sub(1);
         max_value.wrapping_add(inp)
     };
 
@@ -64,7 +67,10 @@ fn unpack_int(inp: &[u8]) -> Result<(i64, &[u8]), UnpackError> {
             let out = if code >= INT_ZERO_CODE {
                 val
             } else {
-                let max_value = 1i64.checked_shl(nbytes as u32 * 8).unwrap_or(0).wrapping_sub(1);
+                let max_value = 1i64
+                    .checked_shl(nbytes as u32 * 8)
+                    .unwrap_or(0)
+                    .wrapping_sub(1);
                 val.wrapping_sub(max_value)
             };
 
@@ -147,8 +153,8 @@ impl_u!(u64);
 
 #[cfg(test)]
 mod test {
-    use rand::random;
     use super::*;
+    use rand::random;
 
     fn test_int(in_val: i64, buf: &mut Vec<u8>) {
         buf.clear();

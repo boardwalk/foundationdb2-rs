@@ -93,7 +93,7 @@ impl KeyValueArray {
     pub fn get(&self, index: usize) -> KeyValue {
         debug_assert_eq!(size_of::<RawKeyValue>(), size_of::<fdb::FDBKeyValue>());
         KeyValue {
-            kv: unsafe { &*self.kv.add(index) }
+            kv: unsafe { &*self.kv.add(index) },
         }
     }
 

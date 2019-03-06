@@ -2,14 +2,14 @@
 
 mod tuple;
 
-use foundationdb::{Database, Transaction, CommittedTransaction, Error};
+use foundationdb::{CommittedTransaction, Database, Error, Transaction};
 use futures::Future;
 
 // TODO Fun should take &Transaction, but I can't get the lifetimes right
 pub async fn transact<Fun, Fut>(db: &Database, f: Fun) -> Result<CommittedTransaction, Error>
 where
     Fun: Fn(Transaction) -> Fut + 'static,
-    Fut: Future<Output = Result<Transaction, Error>>
+    Fut: Future<Output = Result<Transaction, Error>>,
 {
     let mut tran = db.create_transaction()?;
     loop {
@@ -26,9 +26,9 @@ where
 
 #[cfg(test)]
 mod test {
+    use super::transact;
     use foundationdb::{Cluster, Error, Network};
     use futures::executor::block_on;
-    use super::transact;
 
     #[test]
     fn test_general() {
@@ -40,7 +40,9 @@ mod test {
         // Note: If you create a cluster and a database and then immediately shut down,
         // the network thread will crash. I should create a C repro and post an issue.
 
-        let cluster = await!(Cluster::new("/Users/boardwalk/Code/foundationdb-build/fdb.cluster"))?;
+        let cluster = await!(Cluster::new(
+            "/Users/boardwalk/Code/foundationdb-build/fdb.cluster"
+        ))?;
         let database = await!(cluster.create_database())?;
 
         await!(transact(&database, |tran| async {

@@ -11,11 +11,7 @@ pub struct Network {
 impl Network {
     pub fn set_option(option: NetworkOption, value: &[u8]) -> Result<(), Error> {
         bail!(unsafe {
-            fdb::fdb_network_set_option(
-                option.as_c_enum(),
-                value.as_ptr(),
-                value.len() as c_int,
-            )
+            fdb::fdb_network_set_option(option.as_c_enum(), value.as_ptr(), value.len() as c_int)
         });
 
         Ok(())
@@ -41,7 +37,9 @@ impl Network {
         if let Some(join_handle) = self.join_handle.take() {
             bail!(unsafe { fdb::fdb_stop_network() });
             let unknown_error = 4000;
-            join_handle.join().map_err(|_| Error { err: unknown_error })?;
+            join_handle
+                .join()
+                .map_err(|_| Error { err: unknown_error })?;
         }
 
         Ok(())

@@ -1,7 +1,7 @@
 use crate::error::Error;
-use crate::outputs::{Key, KeyValueArray, StringArray, Value};
 use crate::future::Future;
 use crate::options::{ConflictRangeType, MutationType, StreamingMode, TransactionOption};
+use crate::outputs::{Key, KeyValueArray, StringArray, Value};
 use foundationdb_sys as fdb;
 use std::mem::replace;
 use std::os::raw::c_int;
@@ -59,7 +59,11 @@ impl Transaction {
         rfut.into_value()
     }
 
-    pub async fn get_key<'a>(&'a self, selector: KeySelector<'a>, snapshot: bool) -> Result<Key, Error> {
+    pub async fn get_key<'a>(
+        &'a self,
+        selector: KeySelector<'a>,
+        snapshot: bool,
+    ) -> Result<Key, Error> {
         let fut = unsafe {
             fdb::fdb_transaction_get_key(
                 self.tran,
@@ -124,13 +128,7 @@ impl Transaction {
     }
 
     pub fn clear(&self, key: &[u8]) {
-        unsafe {
-            fdb::fdb_transaction_clear(
-                self.tran,
-                key.as_ptr(),
-                key.len() as c_int,
-            )
-        };
+        unsafe { fdb::fdb_transaction_clear(self.tran, key.as_ptr(), key.len() as c_int) };
     }
 
     pub fn clear_range(&self, begin_key: &[u8], end_key: &[u8]) {
@@ -159,13 +157,8 @@ impl Transaction {
     }
 
     pub async fn watch<'a>(&'a self, key: &'a [u8]) -> Result<(), Error> {
-        let fut = unsafe {
-            fdb::fdb_transaction_watch(
-                self.tran,
-                key.as_ptr(),
-                key.len() as c_int,
-            )
-        };
+        let fut =
+            unsafe { fdb::fdb_transaction_watch(self.tran, key.as_ptr(), key.len() as c_int) };
         let _ = await!(Future::new(fut))?;
         Ok(())
     }
@@ -175,34 +168,31 @@ impl Transaction {
     }
 
     pub async fn get_read_version(&self) -> Result<i64, Error> {
-        let fut = unsafe {
-            fdb::fdb_transaction_get_read_version(self.tran)
-        };
+        let fut = unsafe { fdb::fdb_transaction_get_read_version(self.tran) };
         let rfut = await!(Future::new(fut))?;
         rfut.into_version()
     }
 
     pub async fn get_addresses_for_key<'a>(&'a self, key: &'a [u8]) -> Result<StringArray, Error> {
         let fut = unsafe {
-            fdb::fdb_transaction_get_addresses_for_key(
-                self.tran,
-                key.as_ptr(),
-                key.len() as c_int,
-            )
+            fdb::fdb_transaction_get_addresses_for_key(self.tran, key.as_ptr(), key.len() as c_int)
         };
         let rfut = await!(Future::new(fut))?;
         rfut.into_string_array()
     }
 
     pub async fn get_versionstamp(&self) -> Result<Key, Error> {
-        let fut = unsafe {
-            fdb::fdb_transaction_get_versionstamp(self.tran)
-        };
+        let fut = unsafe { fdb::fdb_transaction_get_versionstamp(self.tran) };
         let rfut = await!(Future::new(fut))?;
         rfut.into_key()
     }
 
-    pub fn add_conflict_range<'a>(&'a self, begin_key: &'a [u8], end_key: &'a [u8], range_type: ConflictRangeType) -> Result<(), Error> {
+    pub fn add_conflict_range<'a>(
+        &'a self,
+        begin_key: &'a [u8],
+        end_key: &'a [u8],
+        range_type: ConflictRangeType,
+    ) -> Result<(), Error> {
         bail!(unsafe {
             fdb::fdb_transaction_add_conflict_range(
                 self.tran,
@@ -268,11 +258,9 @@ impl FailedTransaction {
     pub async fn on_error(mut self) -> Result<Transaction, FailedTransaction> {
         let fut = unsafe { fdb::fdb_transaction_on_error(self.tran, self.err) };
         match await!(Future::new(fut)) {
-            Ok(_) => {
-                Ok(Transaction {
-                    tran: replace(&mut self.tran, null_mut()),
-                })
-            }
+            Ok(_) => Ok(Transaction {
+                tran: replace(&mut self.tran, null_mut()),
+            }),
             Err(err) => {
                 self.err = err.err;
                 Err(self)

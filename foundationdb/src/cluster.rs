@@ -21,11 +21,7 @@ impl Cluster {
     pub async fn create_database(&self) -> Result<Database, Error> {
         let db_name = "DB";
         let fut = unsafe {
-            fdb::fdb_cluster_create_database(
-                self.cluster,
-                db_name.as_ptr(),
-                db_name.len() as c_int,
-            )
+            fdb::fdb_cluster_create_database(self.cluster, db_name.as_ptr(), db_name.len() as c_int)
         };
         let rfut = await!(Future::new(fut))?;
         let database = rfut.into_database()?;

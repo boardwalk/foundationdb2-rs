@@ -1,8 +1,8 @@
 use crate::error::Error;
-use crate::outputs::{Key, Value, KeyValueArray, StringArray};
+use crate::outputs::{Key, KeyValueArray, StringArray, Value};
 use foundationdb_sys as fdb;
-use futures::{self, Poll};
 use futures::task::{AtomicWaker, Waker};
+use futures::{self, Poll};
 use std::mem::replace;
 use std::os::raw::c_void;
 use std::pin::Pin;
@@ -69,10 +69,7 @@ impl Drop for Future {
     }
 }
 
-extern "C" fn fdb_future_callback(
-    _fut: *mut fdb::FDBFuture,
-    callback_parameter: *mut c_void,
-) {
+extern "C" fn fdb_future_callback(_fut: *mut fdb::FDBFuture, callback_parameter: *mut c_void) {
     let awaker: *const AtomicWaker = callback_parameter as *const _;
     unsafe { (*awaker).wake() };
 }
@@ -133,7 +130,9 @@ impl ReadyFuture {
         let mut kv = null();
         let mut count = 0;
         let mut more = 0;
-        bail!(unsafe { fdb::fdb_future_get_keyvalue_array(self.fut, &mut kv, &mut count, &mut more) });
+        bail!(unsafe {
+            fdb::fdb_future_get_keyvalue_array(self.fut, &mut kv, &mut count, &mut more)
+        });
         Ok(KeyValueArray {
             fut: replace(&mut self.fut, null_mut()),
             kv,

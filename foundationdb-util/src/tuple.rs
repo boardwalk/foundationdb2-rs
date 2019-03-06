@@ -8,9 +8,9 @@ mod tuple;
 mod uuid;
 mod versionstamp;
 
-use std::string::FromUtf8Error;
-use std::num::TryFromIntError;
 use std::convert::Infallible;
+use std::num::TryFromIntError;
+use std::string::FromUtf8Error;
 
 pub trait TuplePack {
     fn pack(&self, out: &mut Vec<u8>, nested: bool);
@@ -61,8 +61,8 @@ pub(crate) fn expect(inp: &[u8], expected: u8) -> Result<&[u8], UnpackError> {
 
 #[cfg(test)]
 mod tests {
-    use std::fmt::Debug;
     use super::{TuplePack, TupleUnpack};
+    use std::fmt::Debug;
 
     fn test_pack_unpack<T>(in_val: T, buf: &mut Vec<u8>)
     where
