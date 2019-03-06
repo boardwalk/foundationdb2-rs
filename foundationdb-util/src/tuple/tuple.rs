@@ -1,11 +1,11 @@
-use crate::tuple::{expect, TuplePack, TupleUnpack, UnpackError};
+use crate::tuple::{expect, Pack, Unpack, UnpackError};
 
 const NESTED_CODE: u8 = 0x05;
 
-impl<T1, T2> TuplePack for (T1, T2)
+impl<T1, T2> Pack for (T1, T2)
 where
-    T1: TuplePack,
-    T2: TuplePack,
+    T1: Pack,
+    T2: Pack,
 {
     fn pack(&self, out: &mut Vec<u8>, nested: bool) {
         let (v1, v2) = self;
@@ -20,10 +20,10 @@ where
     }
 }
 
-impl<T1, T2> TupleUnpack for (T1, T2)
+impl<T1, T2> Unpack for (T1, T2)
 where
-    T1: TupleUnpack,
-    T2: TupleUnpack,
+    T1: Unpack,
+    T2: Unpack,
 {
     fn unpack(inp: &[u8], nested: bool) -> Result<(Self, &[u8]), UnpackError> {
         let inp = if nested {

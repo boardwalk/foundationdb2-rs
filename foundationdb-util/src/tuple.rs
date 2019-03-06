@@ -12,11 +12,11 @@ use std::convert::Infallible;
 use std::num::TryFromIntError;
 use std::string::FromUtf8Error;
 
-pub trait TuplePack {
+pub trait Pack {
     fn pack(&self, out: &mut Vec<u8>, nested: bool);
 }
 
-pub trait TupleUnpack: Sized {
+pub trait Unpack: Sized {
     fn unpack(inp: &[u8], nested: bool) -> Result<(Self, &[u8]), UnpackError>;
 }
 
@@ -61,12 +61,12 @@ pub(crate) fn expect(inp: &[u8], expected: u8) -> Result<&[u8], UnpackError> {
 
 #[cfg(test)]
 mod tests {
-    use super::{TuplePack, TupleUnpack};
+    use super::{Pack, Unpack};
     use std::fmt::Debug;
 
     fn test_pack_unpack<T>(in_val: T, buf: &mut Vec<u8>)
     where
-        T: TuplePack + TupleUnpack + Debug + PartialEq,
+        T: Pack + Unpack + Debug + PartialEq,
     {
         buf.clear();
         T::pack(&in_val, buf, false);

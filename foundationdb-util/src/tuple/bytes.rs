@@ -1,4 +1,4 @@
-use crate::tuple::{expect, TuplePack, TupleUnpack, UnpackError};
+use crate::tuple::{expect, Pack, Unpack, UnpackError};
 
 const BYTES_CODE: u8 = 0x01;
 const STRING_CODE: u8 = 0x02;
@@ -35,14 +35,14 @@ fn unpack_bytes(inp: &[u8]) -> (Vec<u8>, &[u8]) {
     (out, &inp[i..])
 }
 
-impl TuplePack for [u8] {
+impl Pack for [u8] {
     fn pack(&self, out: &mut Vec<u8>, _nested: bool) {
         out.push(BYTES_CODE);
         pack_bytes(self, out);
     }
 }
 
-impl TupleUnpack for Vec<u8> {
+impl Unpack for Vec<u8> {
     fn unpack(inp: &[u8], _nested: bool) -> Result<(Self, &[u8]), UnpackError> {
         let inp = expect(inp, BYTES_CODE)?;
         let (vec, inp) = unpack_bytes(inp);
@@ -50,14 +50,14 @@ impl TupleUnpack for Vec<u8> {
     }
 }
 
-impl TuplePack for str {
+impl Pack for str {
     fn pack(&self, out: &mut Vec<u8>, _nested: bool) {
         out.push(STRING_CODE);
         pack_bytes(self.as_bytes(), out);
     }
 }
 
-impl TupleUnpack for String {
+impl Unpack for String {
     fn unpack(inp: &[u8], _nested: bool) -> Result<(Self, &[u8]), UnpackError> {
         let inp = expect(inp, STRING_CODE)?;
         let (vec, inp) = unpack_bytes(inp);
@@ -68,7 +68,7 @@ impl TupleUnpack for String {
 
 #[cfg(test)]
 mod test {
-    use crate::tuple::{TuplePack, TupleUnpack};
+    use crate::tuple::{Pack, Unpack};
     use rand::distributions::{Alphanumeric, Standard};
     use rand::{thread_rng, Rng};
 
@@ -81,9 +81,9 @@ mod test {
             let in_val = rng.sample_iter(&Standard).take(nbytes).collect::<Vec<u8>>();
 
             buf.clear();
-            TuplePack::pack(&in_val[..], &mut buf, false);
+            Pack::pack(&in_val[..], &mut buf, false);
 
-            let (out_val, rest) = <Vec<u8> as TupleUnpack>::unpack(&buf, false).unwrap();
+            let (out_val, rest) = <Vec<u8> as Unpack>::unpack(&buf, false).unwrap();
 
             assert_eq!(in_val, out_val);
             assert!(rest.is_empty());
@@ -102,9 +102,9 @@ mod test {
                 .collect::<String>();
 
             buf.clear();
-            TuplePack::pack(in_val.as_str(), &mut buf, false);
+            Pack::pack(in_val.as_str(), &mut buf, false);
 
-            let (out_val, rest) = <String as TupleUnpack>::unpack(&buf, false).unwrap();
+            let (out_val, rest) = <String as Unpack>::unpack(&buf, false).unwrap();
 
             assert_eq!(in_val, out_val);
             assert!(rest.is_empty());

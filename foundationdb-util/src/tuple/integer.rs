@@ -1,4 +1,4 @@
-use crate::tuple::{TuplePack, TupleUnpack, UnpackError};
+use crate::tuple::{Pack, Unpack, UnpackError};
 use byteorder::{BigEndian, ByteOrder};
 use std::convert::TryFrom;
 
@@ -107,13 +107,13 @@ fn unpack_uint(inp: &[u8]) -> Result<(u64, &[u8]), UnpackError> {
 
 macro_rules! impl_i {
     ($ty:ty) => {
-        impl TuplePack for $ty {
+        impl Pack for $ty {
             fn pack(&self, out: &mut Vec<u8>, _nested: bool) {
                 pack_int(i64::from(*self), out)
             }
         }
 
-        impl TupleUnpack for $ty {
+        impl Unpack for $ty {
             fn unpack(inp: &[u8], _nested: bool) -> Result<(Self, &[u8]), UnpackError> {
                 let (out, inp) = unpack_int(inp)?;
                 let out = TryFrom::try_from(out)?;
@@ -125,13 +125,13 @@ macro_rules! impl_i {
 
 macro_rules! impl_u {
     ($ty:ty) => {
-        impl TuplePack for $ty {
+        impl Pack for $ty {
             fn pack(&self, out: &mut Vec<u8>, _nested: bool) {
                 pack_uint(u64::from(*self), out)
             }
         }
 
-        impl TupleUnpack for $ty {
+        impl Unpack for $ty {
             fn unpack(inp: &[u8], _nested: bool) -> Result<(Self, &[u8]), UnpackError> {
                 let (out, inp) = unpack_uint(inp)?;
                 let out = TryFrom::try_from(out)?;

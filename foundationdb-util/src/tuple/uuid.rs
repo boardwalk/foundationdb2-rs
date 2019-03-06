@@ -1,18 +1,18 @@
-use crate::tuple::{expect, TuplePack, TupleUnpack, UnpackError};
+use crate::tuple::{expect, Pack, Unpack, UnpackError};
 use std::convert::TryFrom;
 use std::mem::size_of;
 use uuid::{Bytes, Uuid};
 
 const UUID_CODE: u8 = 0x30;
 
-impl TuplePack for Uuid {
+impl Pack for Uuid {
     fn pack(&self, out: &mut Vec<u8>, _nested: bool) {
         out.push(UUID_CODE);
         out.extend_from_slice(self.as_bytes());
     }
 }
 
-impl TupleUnpack for Uuid {
+impl Unpack for Uuid {
     fn unpack(inp: &[u8], _nested: bool) -> Result<(Self, &[u8]), UnpackError> {
         let inp = expect(inp, UUID_CODE)?;
 

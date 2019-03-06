@@ -1,10 +1,10 @@
-use crate::tuple::{TuplePack, TupleUnpack, UnpackError};
+use crate::tuple::{Pack, Unpack, UnpackError};
 
 const NULL_CODE: u8 = 0x00;
 
-impl<T> TuplePack for Option<T>
+impl<T> Pack for Option<T>
 where
-    T: TuplePack,
+    T: Pack,
 {
     fn pack(&self, out: &mut Vec<u8>, _nested: bool) {
         if let Some(v) = self {
@@ -15,9 +15,9 @@ where
     }
 }
 
-impl<T> TupleUnpack for Option<T>
+impl<T> Unpack for Option<T>
 where
-    T: TupleUnpack,
+    T: Unpack,
 {
     fn unpack(inp: &[u8], nested: bool) -> Result<(Self, &[u8]), UnpackError> {
         if let Some((&code, inp_some)) = inp.split_first() {
