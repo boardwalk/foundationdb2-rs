@@ -37,19 +37,13 @@ mod test {
     }
 
     async fn test_general_async() -> Result<(), Error> {
-        // Note: If you create a cluster and a database and then immediately shut down,
-        // the network thread will crash. I should create a C repro and post an issue.
         let database = Database::new()?;
 
         await!(transact(&database, |tran| async {
             tran.set(b"hello", b"world");
-
             let value = await!(tran.get(b"hello", false))?;
-
             assert_eq!(value.as_ref().map(|v| v.as_ref()), Some(&b"world"[..]));
-
             tran.clear(b"hello");
-
             Ok(tran)
         }))?;
 
