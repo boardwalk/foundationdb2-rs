@@ -5,10 +5,11 @@ authors = ["Dan Skorupski <boardwalk@ersatsz.com"]
 edition = "2018"
 
 [features]
-default = ["fdb-6_0"]
+default = ["fdb-6_1"]
 fdb-5_1 = []
 fdb-5_2 = []
 fdb-6_0 = []
+fdb-6_1 = []
 
 [build-dependencies]
 bindgen = "0.47"

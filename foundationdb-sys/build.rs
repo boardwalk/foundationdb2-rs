@@ -12,6 +12,9 @@ const API_VERSION: i32 = 520;
 #[cfg(feature = "fdb-6_0")]
 const API_VERSION: i32 = 600;
 
+#[cfg(feature = "fdb-6_1")]
+const API_VERSION: i32 = 610;
+
 fn main() {
     let mut clang_args = Vec::new();
 

@@ -10,7 +10,6 @@ macro_rules! bail {
     }};
 }
 
-mod cluster;
 mod database;
 mod error;
 mod future;
@@ -20,7 +19,6 @@ mod outputs;
 mod transaction;
 
 // Everything is public except future::{Future, ReadyFuture}
-pub use cluster::*;
 pub use database::*;
 pub use error::*;
 pub use network::*;

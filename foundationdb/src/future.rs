@@ -87,18 +87,6 @@ impl ReadyFuture {
         Self { fut }
     }
 
-    pub fn into_cluster(self) -> Result<*mut fdb::FDBCluster, Error> {
-        let mut val = null_mut();
-        bail!(unsafe { fdb::fdb_future_get_cluster(self.fut, &mut val) });
-        Ok(val)
-    }
-
-    pub fn into_database(self) -> Result<*mut fdb::FDBDatabase, Error> {
-        let mut val = null_mut();
-        bail!(unsafe { fdb::fdb_future_get_database(self.fut, &mut val) });
-        Ok(val)
-    }
-
     pub fn into_key(mut self) -> Result<Key, Error> {
         let mut key = null();
         let mut key_len = 0;

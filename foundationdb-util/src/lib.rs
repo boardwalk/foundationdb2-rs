@@ -27,7 +27,7 @@ where
 #[cfg(test)]
 mod test {
     use crate::transact;
-    use foundationdb::{Cluster, Error, Network};
+    use foundationdb::{Database, Error, Network};
     use futures::executor::block_on;
 
     #[test]
@@ -39,11 +39,7 @@ mod test {
     async fn test_general_async() -> Result<(), Error> {
         // Note: If you create a cluster and a database and then immediately shut down,
         // the network thread will crash. I should create a C repro and post an issue.
-
-        let cluster = await!(Cluster::new(
-            "/Users/boardwalk/Code/foundationdb-build/fdb.cluster"
-        ))?;
-        let database = await!(cluster.create_database())?;
+        let database = Database::new()?;
 
         await!(transact(&database, |tran| async {
             tran.set(b"hello", b"world");
