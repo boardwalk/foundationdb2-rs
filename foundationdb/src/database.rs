@@ -4,8 +4,8 @@ use crate::transaction::Transaction;
 use foundationdb_sys as fdb;
 use std::ffi::{CString, OsStr};
 use std::os::{raw::c_int, unix::ffi::OsStrExt};
-use std::ptr::null_mut;
 use std::path::Path;
+use std::ptr::null_mut;
 
 pub struct Database {
     pub(crate) database: *mut fdb::FDBDatabase,
