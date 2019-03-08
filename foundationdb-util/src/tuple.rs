@@ -22,7 +22,17 @@ pub trait Unpack: Sized {
     fn unpack(inp: &[u8], nested: bool) -> Result<(Self, &[u8]), UnpackError>;
 }
 
-#[derive(Debug)]
+// Allows you to pack a &&str, f.e., which happens in the case of tuples like (&str,)
+impl<T> Pack for &T
+where
+    T: Pack + ?Sized,
+{
+    fn pack(&self, out: &mut Vec<u8>, nested: bool) {
+        T::pack(*self, out, nested)
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub enum UnpackError {
     WrongCode,
     OutOfData,

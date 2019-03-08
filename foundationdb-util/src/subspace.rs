@@ -64,3 +64,33 @@ impl Subspace {
         Subspace { prefix_bytes }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::tuple::UnpackError;
+    use super::Subspace;
+
+    fn subspace() {
+        let s1 = Subspace::new(&("entities",));
+        let s2 = Subspace::new(&("entities", 356));
+        let s3 = Subspace::new(&("entities", 789));
+
+        let k1 = s1.pack(&(356, "state"));
+        assert!(s1.contains(&k1));
+        assert!(s2.contains(&k1));
+        assert!(!s3.contains(&k1));
+
+        let (eid, field): (i32, String) = s1.unpack(&k1).unwrap();
+        assert_eq!(eid, 356);
+        assert_eq!(field, "state");
+
+        let (field,): (String,) = s2.unpack(&k1).unwrap();
+        assert_eq!(field, "state");
+
+        let r: Result<(String,), _> = s3.unpack(&k1);
+        assert_eq!(r, Err(UnpackError::MissingPrefix));
+
+        let s4 = s1.subspace(&(356,));
+        assert_eq!(s2.key(), s4.key());
+    }
+}
