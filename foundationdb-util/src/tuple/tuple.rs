@@ -2,7 +2,7 @@ use crate::tuple::{expect, Pack, Unpack, UnpackError};
 
 const NESTED_CODE: u8 = 0x05;
 
-pub trait Tuple: Pack + Unpack {}
+pub trait Tuple {}
 
 macro_rules! impl_tuple {
     ( $($id:ident : $ty:tt),* ) => {
@@ -43,8 +43,6 @@ macro_rules! impl_tuple {
         }
 
         impl< $($ty,)* > Tuple for ( $($ty,)* )
-        where
-            $($ty: Pack + Unpack,)*
         {}
     };
 }

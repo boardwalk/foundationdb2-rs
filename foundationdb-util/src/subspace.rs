@@ -1,11 +1,11 @@
-use crate::tuple::{Tuple, UnpackError};
+use crate::tuple::{Tuple, Pack, Unpack, UnpackError};
 
 pub struct Subspace {
     prefix_bytes: Vec<u8>,
 }
 
 impl Subspace {
-    pub fn new<T: Tuple>(prefix: &T) -> Self {
+    pub fn new<T: Tuple + Pack>(prefix: &T) -> Self {
         let mut prefix_bytes = Vec::new();
         prefix.pack(&mut prefix_bytes, false);
         Subspace { prefix_bytes }
@@ -15,13 +15,13 @@ impl Subspace {
         self.prefix_bytes.as_slice()
     }
 
-    pub fn pack<T: Tuple>(&self, tuple: &T) -> Vec<u8> {
+    pub fn pack<T: Tuple + Pack>(&self, tuple: &T) -> Vec<u8> {
         let mut bytes = self.prefix_bytes.clone();
         tuple.pack(&mut bytes, false);
         bytes
     }
 
-    pub fn unpack<T: Tuple>(&self, inp: &[u8]) -> Result<T, UnpackError> {
+    pub fn unpack<T: Tuple + Unpack>(&self, inp: &[u8]) -> Result<T, UnpackError> {
         if inp.len() < self.prefix_bytes.len() {
             return Err(UnpackError::MissingPrefix);
         }
@@ -44,7 +44,7 @@ impl Subspace {
         }
     }
 
-    pub fn range<T: Tuple>(&self, tuple: &T) -> (Vec<u8>, Vec<u8>) {
+    pub fn range<T: Tuple + Pack>(&self, tuple: &T) -> (Vec<u8>, Vec<u8>) {
         let bytes = self.pack(tuple);
         let mut begin = bytes.clone();
         begin.push(0x00);
@@ -58,7 +58,7 @@ impl Subspace {
             &inp[..self.prefix_bytes.len()] == self.prefix_bytes.as_slice()
     }
 
-    pub fn subspace<T: Tuple>(&self, tuple: &T) -> Self {
+    pub fn subspace<T: Tuple + Pack>(&self, tuple: &T) -> Self {
         let mut prefix_bytes = self.prefix_bytes.clone();
         tuple.pack(&mut prefix_bytes, false);
         Subspace { prefix_bytes }
