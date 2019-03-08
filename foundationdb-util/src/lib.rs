@@ -1,6 +1,9 @@
 #![feature(async_await, await_macro, futures_api)]
 
+mod subspace;
 mod tuple;
+
+pub use subspace::Subspace;
 
 use foundationdb::{CommittedTransaction, Database, Error, Transaction};
 use futures::Future;

@@ -12,6 +12,8 @@ use std::convert::Infallible;
 use std::num::TryFromIntError;
 use std::string::FromUtf8Error;
 
+pub use crate::tuple::tuple::Tuple;
+
 pub trait Pack {
     fn pack(&self, out: &mut Vec<u8>, nested: bool);
 }
@@ -26,6 +28,9 @@ pub enum UnpackError {
     OutOfData,
     OutOfRange,
     BadEncoding,
+    // For Subspace::unpack
+    MissingPrefix,
+    TrailingData,
 }
 
 impl From<FromUtf8Error> for UnpackError {

@@ -2,6 +2,42 @@ use crate::tuple::{expect, Pack, Unpack, UnpackError};
 
 const NESTED_CODE: u8 = 0x05;
 
+impl<T1> Pack for (T1,)
+where
+    T1: Pack,
+{
+    fn pack(&self, out: &mut Vec<u8>, nested: bool) {
+        let (v1,) = self;
+        if nested {
+            out.push(NESTED_CODE);
+        }
+        T1::pack(v1, out, true);
+        if nested {
+            out.push(0x00);
+        }
+    }
+}
+
+impl<T1> Unpack for (T1,)
+where
+    T1: Unpack,
+{
+    fn unpack(inp: &[u8], nested: bool) -> Result<(Self, &[u8]), UnpackError> {
+        let inp = if nested {
+            expect(inp, NESTED_CODE)?
+        } else {
+            inp
+        };
+        let (v1, inp) = T1::unpack(inp, true)?;
+        let inp = if nested {
+            expect(inp, 0x00)?
+        } else {
+            inp
+        };
+        Ok(((v1,), inp))
+    }
+}
+
 impl<T1, T2> Pack for (T1, T2)
 where
     T1: Pack,
@@ -43,3 +79,15 @@ where
 }
 
 // TODO: Implement higher arity
+
+pub trait Tuple: Pack + Unpack {}
+impl<T1> Tuple for (T1,)
+where
+    T1: Pack + Unpack,
+{}
+
+impl<T1, T2> Tuple for (T1, T2)
+where
+    T1: Pack + Unpack,
+    T2: Pack + Unpack,
+{}
