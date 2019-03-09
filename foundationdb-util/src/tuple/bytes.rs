@@ -73,7 +73,7 @@ mod test {
     use rand::{thread_rng, Rng};
 
     #[test]
-    fn test_bytes() {
+    fn test_pack_unpack_bytes() {
         let mut buf = Vec::new();
         let mut rng = thread_rng();
         for _ in 0..10000 {
@@ -91,7 +91,7 @@ mod test {
     }
 
     #[test]
-    fn test_string() {
+    fn test_pack_unpack_string() {
         let mut buf = Vec::new();
         let mut rng = thread_rng();
         for _ in 0..10000 {

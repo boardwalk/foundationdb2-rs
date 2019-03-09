@@ -24,3 +24,15 @@ impl Unpack for bool {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::tuple::test::test_pack_unpack;
+
+    #[test]
+    fn test_pack_unpack_bool() {
+        let mut buf = Vec::new();
+        test_pack_unpack(false, &mut buf);
+        test_pack_unpack(true, &mut buf);
+    }
+}

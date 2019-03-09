@@ -34,3 +34,16 @@ where
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::tuple::test::test_pack_unpack;
+
+    #[test]
+    fn test_pack_unpack_option() {
+        let mut buf = Vec::new();
+        test_pack_unpack(Some(32), &mut buf);
+        let none_val: Option<i32> = None;
+        test_pack_unpack(none_val, &mut buf);
+    }
+}

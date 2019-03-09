@@ -26,4 +26,15 @@ impl Unpack for Uuid {
     }
 }
 
-// TODO: Test Uuid
+#[cfg(test)]
+mod test {
+    use uuid::Uuid;
+    use crate::tuple::test::test_pack_unpack;
+
+    #[test]
+    fn test_pack_unpack_uuid() {
+        let mut buf = Vec::new();
+        let uuid = Uuid::parse_str("0436430c-2b02-624c-2032-570501212b57").unwrap();
+        test_pack_unpack(uuid, &mut buf);
+    }
+}

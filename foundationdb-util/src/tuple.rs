@@ -75,11 +75,20 @@ pub(crate) fn expect(inp: &[u8], expected: u8) -> Result<&[u8], UnpackError> {
 }
 
 #[cfg(test)]
-mod tests {
+mod test {
     use crate::tuple::{Pack, Unpack};
     use std::fmt::Debug;
 
-    fn test_pack_unpack<T>(in_val: T, buf: &mut Vec<u8>)
+    pub fn test_pack<T>(in_val: T, buf: &mut Vec<u8>, out_val: &[u8])
+    where
+        T: Pack,
+    {
+        buf.clear();
+        T::pack(&in_val, buf, false);
+        assert_eq!(&buf[..], out_val);
+    }
+
+    pub fn test_pack_unpack<T>(in_val: T, buf: &mut Vec<u8>)
     where
         T: Pack + Unpack + Debug + PartialEq,
     {
@@ -88,27 +97,5 @@ mod tests {
         let (out_val, rest) = T::unpack(&buf, false).unwrap();
         assert_eq!(in_val, out_val);
         assert!(rest.is_empty());
-    }
-
-    #[test]
-    fn test_bool() {
-        let mut buf = Vec::new();
-        test_pack_unpack(false, &mut buf);
-        test_pack_unpack(true, &mut buf);
-    }
-
-    #[test]
-    fn test_option() {
-        let mut buf = Vec::new();
-        test_pack_unpack(Some(32), &mut buf);
-        let none_val: Option<i32> = None;
-        test_pack_unpack(none_val, &mut buf);
-    }
-
-    #[test]
-    fn test_tuple() {
-        let mut buf = Vec::new();
-        test_pack_unpack((42, true), &mut buf);
-        test_pack_unpack((1, (2, 3)), &mut buf);
     }
 }

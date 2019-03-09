@@ -55,3 +55,15 @@ impl_tuple!(v1: T1, v2: T2, v3: T3, v4: T4, v5: T5);
 impl_tuple!(v1: T1, v2: T2, v3: T3, v4: T4, v5: T5, v6: T6);
 impl_tuple!(v1: T1, v2: T2, v3: T3, v4: T4, v5: T5, v6: T6, v7: T7);
 impl_tuple!(v1: T1, v2: T2, v3: T3, v4: T4, v5: T5, v6: T6, v7: T7, v8: T8);
+
+#[cfg(test)]
+mod test {
+    use crate::tuple::test::test_pack_unpack;
+
+    #[test]
+    fn test_pack_unpack_tuple() {
+        let mut buf = Vec::new();
+        test_pack_unpack((42, true), &mut buf);
+        test_pack_unpack((1, (2, 3)), &mut buf);
+    }
+}
