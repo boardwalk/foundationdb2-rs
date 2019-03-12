@@ -108,11 +108,33 @@ impl KeyValueArray {
     pub fn more(&self) -> bool {
         self.more != 0
     }
+
+    pub fn iter(&self) -> KeyValueArrayIter {
+        KeyValueArrayIter { arr: self, i: 0 }
+    }
 }
 
 impl Drop for KeyValueArray {
     fn drop(&mut self) {
         unsafe { fdb::fdb_future_destroy(self.fut) };
+    }
+}
+
+pub struct KeyValueArrayIter<'a> {
+    arr: &'a KeyValueArray,
+    i: usize,
+}
+
+impl<'a> Iterator for KeyValueArrayIter<'a> {
+    type Item = KeyValue<'a>;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.i < self.arr.len() {
+            let i = self.i;
+            self.i += 1;
+            Some(self.arr.get(i))
+        } else {
+            None
+        }
     }
 }
 

@@ -8,20 +8,20 @@ use std::os::raw::c_int;
 use std::ptr::null_mut;
 
 pub struct KeySelector<'a> {
-    key: &'a [u8],
-    equal: bool,
-    offset: i32,
+    pub key: &'a [u8],
+    pub equal: bool,
+    pub offset: i32,
 }
 
 pub struct GetRangeOpt<'a> {
-    begin_selector: KeySelector<'a>,
-    end_selector: KeySelector<'a>,
-    limit: i32,
-    target_bytes: i32,
-    mode: StreamingMode,
-    iteration: i32,
-    snapshot: bool,
-    reverse: bool,
+    pub begin_selector: KeySelector<'a>,
+    pub end_selector: KeySelector<'a>,
+    pub limit: i32,
+    pub target_bytes: i32,
+    pub mode: StreamingMode,
+    pub iteration: i32,
+    pub snapshot: bool,
+    pub reverse: bool,
 }
 
 /*
@@ -78,7 +78,7 @@ impl Transaction {
         rfut.into_key()
     }
 
-    pub async fn get_range<'a>(&'a self, opt: GetRangeOpt<'a>) -> Result<KeyValueArray, Error> {
+    pub async fn get_range<'a>(&'a self, opt: &'a GetRangeOpt<'a>) -> Result<KeyValueArray, Error> {
         let fut = unsafe {
             fdb::fdb_transaction_get_range(
                 self.tran,

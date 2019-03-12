@@ -47,6 +47,7 @@ macro_rules! impl_tuple {
     };
 }
 
+impl_tuple!();
 impl_tuple!(v1: T1);
 impl_tuple!(v1: T1, v2: T2);
 impl_tuple!(v1: T1, v2: T2, v3: T3);
