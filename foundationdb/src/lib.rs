@@ -1,4 +1,4 @@
-#![feature(async_await, await_macro, futures_api)]
+#![feature(futures_api)]
 #![allow(clippy::new_ret_no_self)]
 
 macro_rules! bail {
