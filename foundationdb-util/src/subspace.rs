@@ -70,6 +70,7 @@ mod test {
     use super::Subspace;
     use crate::tuple::UnpackError;
 
+    #[test]
     fn subspace() {
         let s1 = Subspace::new(&("entities",));
         let s2 = Subspace::new(&("entities", 356));

@@ -5,7 +5,7 @@ authors = ["Dan Skorupski <boardwalk@ersatsz.com>"]
 edition = "2018"
 
 [features]
-default = ["async"]
+default = []
 async = ["futures-preview"]
 
 [dependencies]

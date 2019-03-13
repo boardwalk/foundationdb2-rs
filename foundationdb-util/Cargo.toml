@@ -10,7 +10,6 @@ default = ["uuid"]
 [dependencies]
 byteorder = "1.3"
 foundationdb = { path = "../foundationdb" }
-futures-preview = "0.3.0-alpha.13"
 uuid = { version = "0.7", optional = true }
 
 [dev-dependencies]
