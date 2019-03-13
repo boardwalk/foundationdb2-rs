@@ -20,6 +20,8 @@ mod network;
 mod options;
 mod outputs;
 mod transaction;
+#[cfg(feature = "async")]
+mod transaction_async;
 
 // Everything is public except futures
 pub use database::*;
