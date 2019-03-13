@@ -28,8 +28,8 @@ impl Unpack for Uuid {
 
 #[cfg(test)]
 mod test {
-    use uuid::Uuid;
     use crate::tuple::test::test_pack_unpack;
+    use uuid::Uuid;
 
     #[test]
     fn test_pack_unpack_uuid() {

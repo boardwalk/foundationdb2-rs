@@ -14,9 +14,7 @@ pub struct Future {
 
 impl Future {
     pub fn new(fut: *mut fdb::FDBFuture) -> Self {
-        Self {
-            fut,
-        }
+        Self { fut }
     }
 
     pub fn block_until_ready(mut self) -> Result<FutureReady, Error> {

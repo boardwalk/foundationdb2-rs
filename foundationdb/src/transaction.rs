@@ -1,12 +1,12 @@
 use crate::error::Error;
 use crate::future::Future;
-use crate::options::{ConflictRangeType, MutationType, StreamingMode, TransactionOption};
-use crate::outputs::{Key, KeyValueArray, StringArray, Value};
 #[cfg(feature = "async")]
 use crate::future_async::FutureAsync;
-#[cfg(feature = "async")]
-use futures::{future, future::ready, FutureExt, TryFutureExt};
+use crate::options::{ConflictRangeType, MutationType, StreamingMode, TransactionOption};
+use crate::outputs::{Key, KeyValueArray, StringArray, Value};
 use foundationdb_sys as fdb;
+#[cfg(feature = "async")]
+use futures::{future::ready, FutureExt, TryFutureExt};
 use std::mem::replace;
 use std::os::raw::c_int;
 use std::ptr::null_mut;
@@ -59,11 +59,17 @@ impl Transaction {
                 snapshot as fdb::fdb_bool_t,
             )
         };
-        Future::new(fut).block_until_ready().and_then(|fut| fut.into_value())
+        Future::new(fut)
+            .block_until_ready()
+            .and_then(|fut| fut.into_value())
     }
 
     #[cfg(feature = "async")]
-    pub fn get_async<'a>(&'a self, key: &'a [u8], snapshot: bool) -> impl future::Future<Output = Result<Option<Value>, Error>> {
+    pub fn get_async<'a>(
+        &'a self,
+        key: &'a [u8],
+        snapshot: bool,
+    ) -> impl futures::Future<Output = Result<Option<Value>, Error>> {
         let fut = unsafe {
             fdb::fdb_transaction_get(
                 self.tran,
@@ -75,11 +81,7 @@ impl Transaction {
         FutureAsync::new(fut).and_then(|fut| ready(fut.into_value()))
     }
 
-    pub fn get_key(
-        &self,
-        selector: KeySelector,
-        snapshot: bool,
-    ) -> Result<Key, Error> {
+    pub fn get_key(&self, selector: KeySelector, snapshot: bool) -> Result<Key, Error> {
         let fut = unsafe {
             fdb::fdb_transaction_get_key(
                 self.tran,
@@ -90,7 +92,9 @@ impl Transaction {
                 snapshot as fdb::fdb_bool_t,
             )
         };
-        Future::new(fut).block_until_ready().and_then(|fut| fut.into_key())
+        Future::new(fut)
+            .block_until_ready()
+            .and_then(|fut| fut.into_key())
     }
 
     #[cfg(feature = "async")]
@@ -136,11 +140,16 @@ impl Transaction {
 
     pub fn get_range(&self, opt: &GetRangeOpt) -> Result<KeyValueArray, Error> {
         let fut = self.get_range_raw(opt);
-        Future::new(fut).block_until_ready().and_then(|fut| fut.into_keyvalue_array())
+        Future::new(fut)
+            .block_until_ready()
+            .and_then(|fut| fut.into_keyvalue_array())
     }
 
     #[cfg(feature = "async")]
-    pub fn get_range_async<'a>(&'a self, opt: &'a GetRangeOpt<'a>) -> impl futures::Future<Output = Result<KeyValueArray, Error>> {
+    pub fn get_range_async<'a>(
+        &'a self,
+        opt: &'a GetRangeOpt<'a>,
+    ) -> impl futures::Future<Output = Result<KeyValueArray, Error>> {
         let fut = self.get_range_raw(opt);
         FutureAsync::new(fut).and_then(|fut| ready(fut.into_keyvalue_array()))
     }
@@ -200,7 +209,9 @@ impl Transaction {
     }
 
     #[cfg(feature = "async")]
-    pub fn commit_async(mut self) -> impl futures::Future<Output = Result<CommittedTransaction, FailedTransaction>> {
+    pub fn commit_async(
+        mut self,
+    ) -> impl futures::Future<Output = Result<CommittedTransaction, FailedTransaction>> {
         let fut = unsafe { fdb::fdb_transaction_commit(self.tran) };
         FutureAsync::new(fut).map(move |res| match res {
             Ok(_) => Ok(CommittedTransaction {
@@ -214,25 +225,18 @@ impl Transaction {
     }
 
     pub fn watch(&self, key: &[u8]) -> Result<(), Error> {
-        let fut = unsafe {
-            fdb::fdb_transaction_watch(
-                self.tran,
-                key.as_ptr(),
-                key.len() as c_int,
-            )
-        };
+        let fut =
+            unsafe { fdb::fdb_transaction_watch(self.tran, key.as_ptr(), key.len() as c_int) };
         Future::new(fut).block_until_ready().map(|_| ())
     }
 
     #[cfg(feature = "async")]
-    pub fn watch_async<'a>(&'a self, key: &'a [u8]) -> impl futures::Future<Output = Result<(), Error>> {
-        let fut = unsafe {
-            fdb::fdb_transaction_watch(
-                self.tran,
-                key.as_ptr(),
-                key.len() as c_int,
-            )
-        };
+    pub fn watch_async<'a>(
+        &'a self,
+        key: &'a [u8],
+    ) -> impl futures::Future<Output = Result<(), Error>> {
+        let fut =
+            unsafe { fdb::fdb_transaction_watch(self.tran, key.as_ptr(), key.len() as c_int) };
         FutureAsync::new(fut).map_ok(|_| ())
     }
 
@@ -242,7 +246,9 @@ impl Transaction {
 
     pub fn get_read_version(&self) -> Result<i64, Error> {
         let fut = unsafe { fdb::fdb_transaction_get_read_version(self.tran) };
-        Future::new(fut).block_until_ready().and_then(|fut| fut.into_version())
+        Future::new(fut)
+            .block_until_ready()
+            .and_then(|fut| fut.into_version())
     }
 
     #[cfg(feature = "async")]
@@ -252,19 +258,30 @@ impl Transaction {
     }
 
     pub fn get_addresses_for_key(&self, key: &[u8]) -> Result<StringArray, Error> {
-        let fut = unsafe { fdb::fdb_transaction_get_addresses_for_key(self.tran, key.as_ptr(), key.len() as c_int) };
-        Future::new(fut).block_until_ready().and_then(|fut| fut.into_string_array())
+        let fut = unsafe {
+            fdb::fdb_transaction_get_addresses_for_key(self.tran, key.as_ptr(), key.len() as c_int)
+        };
+        Future::new(fut)
+            .block_until_ready()
+            .and_then(|fut| fut.into_string_array())
     }
 
     #[cfg(feature = "async")]
-    pub fn get_addresses_for_key_async<'a>(&'a self, key: &'a [u8]) -> impl futures::Future<Output = Result<StringArray, Error>> {
-        let fut = unsafe { fdb::fdb_transaction_get_addresses_for_key(self.tran, key.as_ptr(), key.len() as c_int) };
+    pub fn get_addresses_for_key_async<'a>(
+        &'a self,
+        key: &'a [u8],
+    ) -> impl futures::Future<Output = Result<StringArray, Error>> {
+        let fut = unsafe {
+            fdb::fdb_transaction_get_addresses_for_key(self.tran, key.as_ptr(), key.len() as c_int)
+        };
         FutureAsync::new(fut).and_then(|fut| ready(fut.into_string_array()))
     }
 
     pub fn get_versionstamp(&self) -> Result<Key, Error> {
         let fut = unsafe { fdb::fdb_transaction_get_versionstamp(self.tran) };
-        Future::new(fut).block_until_ready().and_then(|fut| fut.into_key())
+        Future::new(fut)
+            .block_until_ready()
+            .and_then(|fut| fut.into_key())
     }
 
     #[cfg(feature = "async")]
@@ -355,7 +372,9 @@ impl FailedTransaction {
     }
 
     #[cfg(feature = "async")]
-    pub fn on_error_async(mut self) -> impl futures::Future<Output = Result<Transaction, FailedTransaction>> {
+    pub fn on_error_async(
+        mut self,
+    ) -> impl futures::Future<Output = Result<Transaction, FailedTransaction>> {
         let fut = unsafe { fdb::fdb_transaction_on_error(self.tran, self.err) };
         FutureAsync::new(fut).map(|res| match res {
             Ok(_) => Ok(Transaction {

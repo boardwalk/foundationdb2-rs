@@ -1,4 +1,4 @@
-use crate::tuple::{Tuple, Pack, Unpack, UnpackError};
+use crate::tuple::{Pack, Tuple, Unpack, UnpackError};
 
 pub struct Subspace {
     prefix_bytes: Vec<u8>,
@@ -54,8 +54,8 @@ impl Subspace {
     }
 
     pub fn contains(&self, inp: &[u8]) -> bool {
-        inp.len() >= self.prefix_bytes.len() &&
-            &inp[..self.prefix_bytes.len()] == self.prefix_bytes.as_slice()
+        inp.len() >= self.prefix_bytes.len()
+            && &inp[..self.prefix_bytes.len()] == self.prefix_bytes.as_slice()
     }
 
     pub fn subspace<T: Tuple + Pack>(&self, tuple: &T) -> Self {
@@ -67,8 +67,8 @@ impl Subspace {
 
 #[cfg(test)]
 mod test {
-    use crate::tuple::UnpackError;
     use super::Subspace;
+    use crate::tuple::UnpackError;
 
     fn subspace() {
         let s1 = Subspace::new(&("entities",));
