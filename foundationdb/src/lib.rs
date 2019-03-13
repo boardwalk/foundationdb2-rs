@@ -13,12 +13,15 @@ macro_rules! bail {
 mod database;
 mod error;
 mod future;
+#[cfg(feature = "async")]
+mod future_async;
+mod future_ready;
 mod network;
 mod options;
 mod outputs;
 mod transaction;
 
-// Everything is public except future::{Future, ReadyFuture}
+// Everything is public except futures
 pub use database::*;
 pub use error::*;
 pub use network::*;
