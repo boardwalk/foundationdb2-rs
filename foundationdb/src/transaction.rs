@@ -11,12 +11,29 @@ use std::mem::replace;
 use std::os::raw::c_int;
 use std::ptr::null_mut;
 
+impl Default for StreamingMode {
+    fn default() -> Self {
+        StreamingMode::Medium
+    }
+}
+
+impl<'a> Default for KeySelector<'a> {
+    fn default() -> Self {
+        Self {
+            key: &[],
+            equal: true,
+            offset: 0,
+        }
+    }
+}
+
 pub struct KeySelector<'a> {
     pub key: &'a [u8],
     pub equal: bool,
     pub offset: i32,
 }
 
+#[derive(Default)]
 pub struct GetRangeOpt<'a> {
     pub begin_selector: KeySelector<'a>,
     pub end_selector: KeySelector<'a>,
