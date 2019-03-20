@@ -11,10 +11,6 @@ impl Subspace {
         Subspace { prefix_bytes }
     }
 
-    pub fn key(&self) -> &[u8] {
-        self.prefix_bytes.as_slice()
-    }
-
     pub fn pack<T: Tuple + Pack>(&self, tuple: &T) -> Vec<u8> {
         let mut bytes = self.prefix_bytes.clone();
         tuple.pack(&mut bytes, false);
@@ -62,6 +58,12 @@ impl Subspace {
         let mut prefix_bytes = self.prefix_bytes.clone();
         tuple.pack(&mut prefix_bytes, false);
         Subspace { prefix_bytes }
+    }
+}
+
+impl AsRef<[u8]> for Subspace {
+    fn as_ref(&self) -> &[u8] {
+        self.prefix_bytes.as_slice()
     }
 }
 

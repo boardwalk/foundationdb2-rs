@@ -2,7 +2,7 @@ use foundationdb_sys as fdb;
 use std::borrow::Cow;
 use std::ffi::CStr;
 use std::mem::size_of;
-use std::os::raw::{c_char, c_int};
+use std::os::raw::{c_char, c_int, c_void};
 use std::slice;
 
 /*
@@ -53,11 +53,11 @@ impl Drop for Value {
  * KeyValue
  */
 
-#[repr(C)]
+#[repr(packed)]
 struct RawKeyValue {
-    key: *const u8,
+    key: *const c_void,
     key_len: c_int,
-    value: *const u8,
+    value: *const c_void,
     value_len: c_int,
 }
 
@@ -69,12 +69,12 @@ pub struct KeyValue<'a> {
 impl<'a> KeyValue<'a> {
     pub fn key(&self) -> &[u8] {
         let kv = self.kv as *const _ as *const RawKeyValue;
-        unsafe { slice::from_raw_parts((*kv).key, (*kv).key_len as usize) }
+        unsafe { slice::from_raw_parts((*kv).key as *const _, (*kv).key_len as usize) }
     }
 
     pub fn value(&self) -> &[u8] {
         let kv = self.kv as *const _ as *const RawKeyValue;
-        unsafe { slice::from_raw_parts((*kv).value, (*kv).value_len as usize) }
+        unsafe { slice::from_raw_parts((*kv).value as *const _, (*kv).value_len as usize) }
     }
 }
 
@@ -91,6 +91,7 @@ pub struct KeyValueArray {
 
 impl KeyValueArray {
     pub fn get(&self, index: usize) -> KeyValue {
+        // TODO: This assert should be in a test
         debug_assert_eq!(size_of::<RawKeyValue>(), size_of::<fdb::FDBKeyValue>());
         KeyValue {
             kv: unsafe { &*self.kv.add(index) },

@@ -13,6 +13,24 @@ pub struct KeySelector<'a> {
     pub offset: i32,
 }
 
+impl<'a> KeySelector<'a> {
+    pub fn last_less_than(key: &'a [u8]) -> Self {
+        Self { key, equal: false, offset: 0 }
+    }
+
+    pub fn last_less_or_equal(key: &'a [u8]) -> Self {
+        Self { key, equal: true, offset: 0 }
+    }
+
+    pub fn first_greater_than(key: &'a [u8]) -> Self {
+        Self { key, equal: true, offset: 1 }
+    }
+
+    pub fn first_greater_or_equal(key: &'a [u8]) -> Self {
+        Self { key, equal: false, offset: 1 }
+    }
+}
+
 #[derive(Default)]
 pub struct GetRangeOpt<'a> {
     pub begin_selector: KeySelector<'a>,
